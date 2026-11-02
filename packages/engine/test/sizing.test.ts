@@ -31,8 +31,10 @@ describe("sizing", () => {
     expect(floorToTick(5, 0)).toBe(5);
   });
 
+  const wide = { maxNotionalUsd: 1_000_000, maxPremiumUsdPerMonth: 10_000, maxLeverage: 1, staleDataMinutes: 180 };
+
   it("full hedge at beta 1 shorts the whole spot book at 1x", () => {
-    const p = sizeHedge({ exposure, fit: fit("hedge"), market });
+    const p = sizeHedge({ exposure, fit: fit("hedge"), market, limits: wide });
     expect(p.side).toBe("short");
     expect(p.leverage).toBe(1);
     expect(p.notionalUsd).toBeCloseTo(68678, -1);
@@ -43,7 +45,7 @@ describe("sizing", () => {
   });
 
   it("partial verdict halves the size", () => {
-    const p = sizeHedge({ exposure, fit: fit("partial", 1, 0.5), market });
+    const p = sizeHedge({ exposure, fit: fit("partial", 1, 0.5), market, limits: wide });
     expect(p.notionalUsd).toBeCloseTo(34339, -1);
   });
 
@@ -54,8 +56,14 @@ describe("sizing", () => {
   });
 
   it("beta scales the size", () => {
-    const p = sizeHedge({ exposure, fit: fit("hedge", 0.6), market });
+    const p = sizeHedge({ exposure, fit: fit("hedge", 0.6), market, limits: wide });
     expect(p.notionalUsd).toBeCloseTo(68678 * 0.6, -1);
+  });
+
+  it("default cap is $50k and applies before anything is built", () => {
+    const p = sizeHedge({ exposure, fit: fit("hedge"), market });
+    expect(p.notionalUsd).toBeLessThanOrEqual(50_000);
+    expect(p.limitsApplied[0]).toMatch(/50,000/);
   });
 
   it("hard cap on notional applies before anything is built", () => {
@@ -83,7 +91,7 @@ describe("sizing", () => {
   });
 
   it("user scale reduces coverage", () => {
-    const p = sizeHedge({ exposure, fit: fit("hedge"), market, scale: 0.25 });
+    const p = sizeHedge({ exposure, fit: fit("hedge"), market, scale: 0.25, limits: wide });
     expect(p.coverage).toBeCloseTo(0.25, 2);
   });
 });
