@@ -6,3 +6,5 @@ export * from "./fit";
 export * from "./limits";
 export * from "./sizing";
 export * from "./simulate";
+export * from "./report";
+export * from "./pipeline";
