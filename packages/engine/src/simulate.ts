@@ -55,12 +55,14 @@ export function simulate(input: SimInput): SimResult {
   const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
   const su = stdev(u);
   const sh = stdev(h);
+  const hedgeTotal = sum(periods.map((p) => p.hedgePnl));
 
   return {
     periods,
     unhedged: { total: round(sum(u)), worst: round(Math.min(0, ...u)), stdev: round(su) },
     hedged: { total: round(sum(h) - fees), worst: round(Math.min(0, ...h)), stdev: round(sh) },
     volReduction: su === 0 ? 0 : round(1 - sh / su, 3),
-    costOfHedgeUsd: round(fees + periods.reduce((a, p) => a - Math.min(0, p.hedgePnl), 0) * 0),
+    // what the hedge cost you if it lost money, plus fees. zero if it paid out.
+    costOfHedgeUsd: round(fees + Math.max(0, -hedgeTotal)),
   };
 }
