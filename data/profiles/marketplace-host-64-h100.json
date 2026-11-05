@@ -1,0 +1,16 @@
+{
+  "id": "marketplace-host-64-h100",
+  "name": "Marketplace host, 64 H100s, 100% spot",
+  "role": "operator",
+  "gpus": [
+    {
+      "model": "H100",
+      "count": 64
+    }
+  ],
+  "avgRateUsd": 2.1,
+  "spotShare": 1.0,
+  "utilisation": 0.72,
+  "proxy": "h100-spot-marketplace",
+  "notes": "single-site host listing on two marketplaces. all revenue floats hourly."
+}

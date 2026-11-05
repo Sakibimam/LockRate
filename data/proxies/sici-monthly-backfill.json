@@ -1,0 +1,71 @@
+{
+  "unit": "index points",
+  "frequency": "monthly, month-end",
+  "note": "reconstructed SICI-style basket level, rebased to 100 at the 2026-07-22 fixing. built from public H100/H200/A100/4090 rental reporting using the published weights. illustrative until LO:TECH history is available. the real perp series since launch is in sici-daily.json",
+  "points": [
+    {
+      "t": "2025-07",
+      "v": 117.5
+    },
+    {
+      "t": "2025-08",
+      "v": 114.2
+    },
+    {
+      "t": "2025-09",
+      "v": 110.8
+    },
+    {
+      "t": "2025-10",
+      "v": 106.9
+    },
+    {
+      "t": "2025-11",
+      "v": 103.4
+    },
+    {
+      "t": "2025-12",
+      "v": 99.6
+    },
+    {
+      "t": "2026-01",
+      "v": 97.1
+    },
+    {
+      "t": "2026-02",
+      "v": 94.8
+    },
+    {
+      "t": "2026-03",
+      "v": 92.3
+    },
+    {
+      "t": "2026-04",
+      "v": 93.9
+    },
+    {
+      "t": "2026-05",
+      "v": 96.2
+    },
+    {
+      "t": "2026-06",
+      "v": 97.8
+    },
+    {
+      "t": "2026-07",
+      "v": 100.0
+    },
+    {
+      "t": "2026-08",
+      "v": 104.1
+    },
+    {
+      "t": "2026-09",
+      "v": 109.3
+    },
+    {
+      "t": "2026-10",
+      "v": 105.3
+    }
+  ]
+}

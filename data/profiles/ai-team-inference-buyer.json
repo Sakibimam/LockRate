@@ -1,0 +1,20 @@
+{
+  "id": "ai-team-inference-buyer",
+  "name": "AI team, on-demand inference buyer",
+  "role": "buyer",
+  "gpus": [
+    {
+      "model": "H100",
+      "count": 32
+    },
+    {
+      "model": "H200",
+      "count": 8
+    }
+  ],
+  "avgRateUsd": 2.6,
+  "spotShare": 0.6,
+  "utilisation": 0.8,
+  "proxy": "h100-h200-on-demand-buyer",
+  "notes": "40% of capacity is on a committed-use deal, the rest is on-demand and bills monthly."
+}

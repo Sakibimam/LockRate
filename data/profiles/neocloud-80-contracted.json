@@ -1,0 +1,20 @@
+{
+  "id": "neocloud-80-contracted",
+  "name": "Neocloud, 512 H100s, 80% on 1y contracts",
+  "role": "operator",
+  "gpus": [
+    {
+      "model": "H100",
+      "count": 448
+    },
+    {
+      "model": "H200",
+      "count": 64
+    }
+  ],
+  "avgRateUsd": 2.35,
+  "spotShare": 0.2,
+  "utilisation": 0.9,
+  "proxy": "h100-reserved-1y",
+  "notes": "most revenue is locked in reserved contracts that repriced upward while spot fell."
+}

@@ -1,0 +1,27 @@
+{
+  "id": "decentralised-provider-4090",
+  "name": "Decentralised provider, 4090 + A100 mix",
+  "role": "operator",
+  "gpus": [
+    {
+      "model": "RTX4090",
+      "count": 120,
+      "rateUsd": 0.42
+    },
+    {
+      "model": "A100",
+      "count": 24,
+      "rateUsd": 1.35
+    },
+    {
+      "model": "OTHER",
+      "count": 40,
+      "rateUsd": 0.3
+    }
+  ],
+  "avgRateUsd": 0.55,
+  "spotShare": 1.0,
+  "utilisation": 0.55,
+  "proxy": "mixed-4090-a100-decentralised",
+  "notes": "consumer cards on a p2p network. a third of the fleet is not in the index at all."
+}
