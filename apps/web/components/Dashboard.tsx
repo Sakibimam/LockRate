@@ -11,6 +11,7 @@ import { FitCard } from "./FitCard";
 import { VerdictBanner } from "./VerdictBanner";
 import { PlanCard } from "./PlanCard";
 import { SimChart } from "./SimChart";
+import { ExplainBox } from "./ExplainBox";
 
 export interface ProxyMap {
   [name: string]: { points: SeriesPoint[]; note: string; unit: string };
@@ -100,6 +101,7 @@ export function Dashboard({ profiles, proxies, index, daily, limits, dataGenerat
           </div>
           <PlanCard plan={result.plan} fit={result.fit} limits={limits} stale={stale} />
           <SimChart sim={result.sim} role={profile.role} />
+          <ExplainBox profile={profile} result={result} />
         </div>
       </div>
     </div>

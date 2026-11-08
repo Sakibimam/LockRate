@@ -4,6 +4,7 @@ import { useState } from "react";
 import { GPU_LABELS, type GpuLine, type GpuModel, type Profile, type SeriesPoint } from "@lockrate/engine";
 import { parseSeriesCsv } from "@/lib/csv";
 import type { ProxyMap } from "./Dashboard";
+import { RateCardPaste } from "./RateCardPaste";
 
 const MODELS = Object.keys(GPU_LABELS) as GpuModel[];
 
@@ -187,6 +188,7 @@ export function ProfileForm({ profiles, profile, onProfile, onPick, proxies, own
         <input className="mt-2 w-full" type="range" min="0" max="1" step="0.05" value={scale} onChange={(e) => onScale(Number(e.target.value))} />
       </div>
 
+      <RateCardPaste onDraft={(p) => onProfile({ ...profile, ...p })} />
     </div>
   );
 }
