@@ -2,7 +2,7 @@
   "marketId": "0x6751442adea73a2b65adce484dd7bde25d204c9695fc9d5410933171f3417410",
   "ticker": "SICI/USDC PERP",
   "source": "injective indexer derivative trades, aggregated per utc day",
-  "generatedAt": "2026-11-05T17:55:12Z",
+  "generatedAt": "2026-11-08T14:12:40Z",
   "days": [
     {
       "t": "2026-10-26",
@@ -83,6 +83,22 @@
       "l": 101.09,
       "c": 101.19,
       "qty": 535.896
+    },
+    {
+      "t": "2026-11-06",
+      "o": 102.47,
+      "h": 102.51,
+      "l": 102.46,
+      "c": 102.51,
+      "qty": 10467.596
+    },
+    {
+      "t": "2026-11-07",
+      "o": 103.57,
+      "h": 103.57,
+      "l": 103.56,
+      "c": 103.57,
+      "qty": 9747.868
     }
   ]
 }
