@@ -1,10 +1,16 @@
 packages:
   - apps/*
   - packages/*
+
+# native build scripts. the ones set to false have pure-js fallbacks or are for
+# hardware wallets we don't use.
 allowBuilds:
-  blake-hash: set this to true or false
-  esbuild: set this to true or false
-  keccak: set this to true or false
-  protobufjs: set this to true or false
-  sharp: set this to true or false
-  tiny-secp256k1: set this to true or false
+  esbuild: true
+  sharp: true
+  keccak: true
+  blake-hash: true
+  tiny-secp256k1: true
+  protobufjs: true
+  usb: false
+  "@reown/appkit": false
+  "@stellar/stellar-sdk": false
