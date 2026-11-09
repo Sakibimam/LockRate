@@ -111,7 +111,8 @@ export class SiciClient {
       oracleType: SICI_ORACLE.type,
       oracleScaleFactor: SICI_ORACLE.scaleFactor,
     });
-    return Number(r.price);
+    // the indexer returns the scaled integer even when you pass the scale factor
+    return Number(r.price) / 10 ** SICI_ORACLE.scaleFactor;
   }
 
   async snapshot(): Promise<SiciSnapshot> {
