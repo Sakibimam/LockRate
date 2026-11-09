@@ -4,7 +4,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { SiciClient } from "../src/index.ts";
+import { SiciClient } from "../src/index";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const out = resolve(here, "../../../data/sici-daily.json");
