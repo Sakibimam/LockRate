@@ -3,19 +3,28 @@
 import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
 import { ChainId } from "@injectivelabs/ts-types";
 import { Wallet } from "@injectivelabs/wallet-base";
-import { MsgBroadcaster } from "@injectivelabs/wallet-core";
-import { WalletStrategy } from "@injectivelabs/wallet-strategy";
+import { BaseWalletStrategy, MsgBroadcaster } from "@injectivelabs/wallet-core";
+import { CosmosWalletStrategy } from "@injectivelabs/wallet-cosmos";
 import type { Msgs } from "@injectivelabs/sdk-ts";
 
 const isTestnet = process.env.NEXT_PUBLIC_INJECTIVE_NETWORK === "testnet";
 export const network = isTestnet ? Network.Testnet : Network.Mainnet;
 export const chainId = isTestnet ? ChainId.Testnet : ChainId.Mainnet;
 
-let strategy: WalletStrategy | null = null;
+let strategy: BaseWalletStrategy | null = null;
 
-export function walletStrategy(): WalletStrategy {
+export function walletStrategy(): BaseWalletStrategy {
   if (!strategy) {
-    strategy = new WalletStrategy({ chainId, strategies: {} });
+    const endpoints = getNetworkEndpoints(network);
+    // wallet-core only: the full wallet-strategy package pulls in walletconnect,
+    // reown and half of the evm wallet world, none of which we need for keplr/leap.
+    strategy = new BaseWalletStrategy({
+      chainId,
+      strategies: {
+        [Wallet.Keplr]: new CosmosWalletStrategy({ chainId, wallet: Wallet.Keplr, endpoints }),
+        [Wallet.Leap]: new CosmosWalletStrategy({ chainId, wallet: Wallet.Leap, endpoints }),
+      },
+    });
   }
   return strategy;
 }
@@ -43,4 +52,8 @@ export async function broadcast(msgs: Msgs | Msgs[], injectiveAddress: string): 
   });
   const res = await broadcaster.broadcast({ msgs, injectiveAddress });
   return res.txHash;
+}
+
+export function explorerTx(hash: string): string {
+  return isTestnet ? `https://testnet.explorer.injective.network/transaction/${hash}` : `https://explorer.injective.network/transaction/${hash}`;
 }

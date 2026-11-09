@@ -11,9 +11,10 @@
   "dependencies": {
     "@injectivelabs/networks": "^1.20.66",
     "@injectivelabs/sdk-ts": "^1.20.66",
+    "@injectivelabs/ts-types": "^1.20.66",
+    "@injectivelabs/wallet-cosmos": "^1.20.66",
     "@injectivelabs/wallet-base": "^1.20.66",
     "@injectivelabs/wallet-core": "^1.20.66",
-    "@injectivelabs/wallet-strategy": "^1.20.66",
     "@lockrate/engine": "workspace:*",
     "@lockrate/explain": "workspace:*",
     "@lockrate/injective": "workspace:*",
