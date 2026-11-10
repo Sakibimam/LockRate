@@ -30,6 +30,15 @@ export interface SiciMarketInfo {
   nextFundingMs?: number;
 }
 
+export interface OpenPosition {
+  direction: "long" | "short";
+  quantity: number;
+  entryPrice: number;
+  margin: number;
+  markPrice: number;
+  liquidationPrice: number;
+  subaccountId: string;
+}
 
 export interface SiciSnapshot {
   market: SiciMarketInfo;
@@ -191,6 +200,24 @@ export class SiciClient {
       if (r.trades.length < 100) break;
     }
     return out.sort((a, b) => a.ts - b.ts);
+  }
+
+  /** open position for a subaccount on the SICI market, if any */
+  async position(subaccountId: string): Promise<OpenPosition | null> {
+    const r = await this.derivatives.fetchPositionsV2({ marketId: this.cfg.marketId, subaccountId });
+    const p = r.positions[0];
+    if (!p || Number(p.quantity) === 0) return null;
+    const market = await this.market();
+    const scale = 10 ** market.quoteDecimals;
+    return {
+      direction: p.direction === "long" ? "long" : "short",
+      quantity: Number(p.quantity),
+      entryPrice: Number(p.entryPrice) / scale,
+      margin: Number(p.margin) / scale,
+      markPrice: Number(p.markPrice) / scale,
+      liquidationPrice: Number(p.liquidationPrice) / scale,
+      subaccountId: p.subaccountId,
+    };
   }
 
   /** daily candles, chronos first, trades as fallback */

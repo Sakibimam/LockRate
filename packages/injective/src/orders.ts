@@ -123,3 +123,52 @@ export function buildPerpOrder(req: OrderRequest): { msg: MsgCreateDerivativeMar
     },
   };
 }
+
+export interface CloseRequest {
+  position: { direction: "long" | "short"; quantity: number; markPrice: number };
+  market: SiciMarketInfo;
+  injectiveAddress: string;
+  slippage?: number;
+  feeRecipient?: string;
+}
+
+/**
+ * reduce-only market order on the opposite side, margin 0. this is how you flatten
+ * a perp on injective without opening anything new.
+ */
+export function buildClosePerpOrder(req: CloseRequest): { msg: MsgCreateDerivativeMarketOrderV2; preview: OrderPreview } {
+  const { position, market } = req;
+  if (position.quantity <= 0) throw new OrderRefused("no position to close");
+  if (market.status !== "active") throw new OrderRefused(`market is ${market.status}`);
+  const closeLong = position.direction === "long";
+  const slippage = req.slippage ?? 0.01;
+  const rawWorst = position.markPrice * (closeLong ? 1 - slippage : 1 + slippage);
+  const worstPrice = closeLong ? roundDown(rawWorst, market.minPriceTick) : roundUp(rawWorst, market.minPriceTick);
+  const quantity = roundDown(position.quantity, market.minQuantityTick);
+  const subaccountId = getDefaultSubaccountId(req.injectiveAddress);
+  const msg = MsgCreateDerivativeMarketOrderV2.fromJSON({
+    marketId: market.marketId,
+    subaccountId,
+    injectiveAddress: req.injectiveAddress,
+    orderType: closeLong ? ORDER_SELL : ORDER_BUY,
+    feeRecipient: req.feeRecipient ?? req.injectiveAddress,
+    price: worstPrice.toString(),
+    quantity: quantity.toString(),
+    margin: "0",
+  });
+  return {
+    msg,
+    preview: {
+      kind: "market",
+      side: closeLong ? "short" : "long",
+      quantity,
+      worstPrice,
+      notionalUsd: Number((quantity * worstPrice).toFixed(2)),
+      marginUsd: 0,
+      leverage: 0,
+      marketId: market.marketId,
+      subaccountId,
+      checks: [`reduce-only, closes ${position.direction} ${position.quantity}`, `worst price ${worstPrice}`, "margin 0, nothing new is opened"],
+    },
+  };
+}

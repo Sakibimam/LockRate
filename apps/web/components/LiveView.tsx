@@ -8,6 +8,7 @@ import { load, type Saved } from "@/lib/store";
 import { num, usd } from "@/lib/format";
 
 type Preview = import("@lockrate/injective").OrderPreview;
+type Position = import("@lockrate/injective").OpenPosition;
 
 export function LiveView({ enabled }: { enabled: boolean }) {
   const [saved, setSaved] = useState<Saved | null>(null);
@@ -20,6 +21,10 @@ export function LiveView({ enabled }: { enabled: boolean }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [position, setPosition] = useState<Position | null | undefined>(undefined);
+  const [closePreview, setClosePreview] = useState<Preview | null>(null);
+  const [closeMsg, setCloseMsg] = useState<unknown>(null);
+  const [closeHash, setCloseHash] = useState<string | null>(null);
 
   useEffect(() => {
     setSaved(load());
@@ -90,6 +95,55 @@ export function LiveView({ enabled }: { enabled: boolean }) {
       const w = await import("@/lib/wallet");
       const hash = await w.broadcast(msg as never, address);
       setTxHash(hash);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "broadcast failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function loadPosition() {
+    if (!address) return;
+    setErr(null);
+    setBusy("reading position");
+    try {
+      const inj = await import("@lockrate/injective");
+      const client = new inj.SiciClient();
+      const sub = inj.getDefaultSubaccountId(address);
+      setPosition(await client.position(sub));
+      setClosePreview(null);
+      setCloseMsg(null);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "could not read position");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function buildClose() {
+    if (!position || !address) return;
+    setErr(null);
+    setBusy("building close");
+    try {
+      const inj = await import("@lockrate/injective");
+      const client = new inj.SiciClient();
+      const built = inj.buildClosePerpOrder({ position, market: await client.market(), injectiveAddress: address });
+      setClosePreview(built.preview);
+      setCloseMsg(built.msg);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "could not build close");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function signClose() {
+    if (!closeMsg || !address) return;
+    setErr(null);
+    setBusy("waiting for wallet");
+    try {
+      const w = await import("@/lib/wallet");
+      setCloseHash(await w.broadcast(closeMsg as never, address));
     } catch (e) {
       setErr(e instanceof Error ? e.message : "broadcast failed");
     } finally {
@@ -179,6 +233,48 @@ export function LiveView({ enabled }: { enabled: boolean }) {
           </div>
         )}
         {err && <div className="t-bad text-xs">{err}</div>}
+      </div>
+
+      <div className="card space-y-2">
+        <div className="muted text-xs">5 · close</div>
+        <div className="flex items-center gap-2">
+          <button className="ghost text-xs" onClick={loadPosition} disabled={!address || busy !== null}>
+            {busy === "reading position" ? "reading..." : "read open position"}
+          </button>
+          {position === null && <span className="muted text-xs">no open SICI position on this subaccount</span>}
+          {position && (
+            <span className="text-xs">
+              {position.direction} {num(position.quantity, 3)} @ {num(position.entryPrice)} · mark {num(position.markPrice)} · margin {usd(position.margin, 2)}
+            </span>
+          )}
+        </div>
+        {position && (
+          <div className="flex items-center gap-2">
+            <button className="ghost text-xs" onClick={buildClose} disabled={busy !== null}>
+              build reduce-only close
+            </button>
+            {closePreview && (
+              <button className="primary text-xs" onClick={signClose} disabled={busy !== null}>
+                sign close
+              </button>
+            )}
+          </div>
+        )}
+        {closePreview && (
+          <ul className="muted text-xs">
+            {closePreview.checks.map((c, i) => (
+              <li key={i}>✓ {c}</li>
+            ))}
+          </ul>
+        )}
+        {closeHash && (
+          <div className="text-xs">
+            closed.{" "}
+            <a className="underline" href={`https://explorer.injective.network/transaction/${closeHash}`} target="_blank" rel="noreferrer">
+              {closeHash}
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );
