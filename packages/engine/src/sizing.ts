@@ -85,6 +85,9 @@ export function sizeHedge(input: SizingInput): HedgePlan {
   if (fit.verdict === "skip") {
     warnings.push("verdict is skip. plan shown for reference only, nothing will be built");
   }
+  if (fit.lowConfidence) {
+    warnings.push("fit score is based on a short history");
+  }
   if (quantity === 0 && exposure.spotNotionalUsd > 0 && base > 0) {
     warnings.push("size rounds to zero at the market's minimum quantity");
   }
