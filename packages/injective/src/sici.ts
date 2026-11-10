@@ -25,6 +25,8 @@ export interface SiciMarketInfo {
   makerFee: number;
   /** last hourly funding rate as fraction. 0 if unknown */
   hourlyFundingRate: number;
+  /** timestamp of the last funding print (ms). a clean hourly heartbeat for the market */
+  lastFundingMs: number;
   nextFundingMs?: number;
 }
 
@@ -77,10 +79,14 @@ export class SiciClient {
     // the chain stores a cumulative price. the indexer's fundingRates endpoint is the
     // clean source for the last hourly rate, so we read that separately.
     let hourlyFundingRate = 0;
+    let lastFundingMs = 0;
     try {
       const fr = await this.derivatives.fetchFundingRates({ marketId: this.cfg.marketId, pagination: { limit: 1 } });
       const last = fr.fundingRates[0];
-      if (last) hourlyFundingRate = Number(last.rate);
+      if (last) {
+        hourlyFundingRate = Number(last.rate);
+        lastFundingMs = Number(last.timestamp);
+      }
     } catch {
       /* non-fatal, we just show 0 */
     }
@@ -100,6 +106,7 @@ export class SiciClient {
       takerFee: Number(m.takerFeeRate),
       makerFee: Number(m.makerFeeRate),
       hourlyFundingRate,
+      lastFundingMs,
       nextFundingMs: info?.nextFundingTimestamp ? Number(info.nextFundingTimestamp) * 1000 : undefined,
     };
   }
@@ -125,7 +132,8 @@ export class SiciClient {
     const lastTrade = trades?.trades[0];
     const lastTradePrice = lastTrade ? chainToIndexPoints(lastTrade.executionPrice, market.quoteDecimals) : 0;
     const lastPrice = summary?.price ?? lastTradePrice;
-    const lastPrintMs = Math.max(lastTrade?.executedAt ?? 0, 0);
+    // trades come in bursts, funding settles every hour. either counts as a print.
+    const lastPrintMs = Math.max(lastTrade?.executedAt ?? 0, market.lastFundingMs);
     return {
       market,
       lastPrice,
