@@ -14,7 +14,7 @@ export function dataDir(): string {
 }
 
 function readJson<T>(rel: string): T {
-  return JSON.parse(readFileSync(join(dataDir(), rel), "utf8")) as T;
+  return JSON.parse(readFileSync(join(/* turbopackIgnore: true */ dataDir(), rel), "utf8")) as T;
 }
 
 export interface DailyFile {
@@ -37,14 +37,14 @@ export function loadDaily(): DailyFile {
 }
 
 export function loadProfiles(): Profile[] {
-  const dir = join(dataDir(), "profiles");
+  const dir = join(/* turbopackIgnore: true */ dataDir(), "profiles");
   return readdirSync(dir)
     .filter((f) => f.endsWith(".json"))
     .map((f) => JSON.parse(readFileSync(join(dir, f), "utf8")) as Profile);
 }
 
 export function loadProxies(): Record<string, ProxyFile> {
-  const dir = join(dataDir(), "proxies");
+  const dir = join(/* turbopackIgnore: true */ dataDir(), "proxies");
   const out: Record<string, ProxyFile> = {};
   for (const f of readdirSync(dir)) {
     if (!f.endsWith(".json")) continue;
