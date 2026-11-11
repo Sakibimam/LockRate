@@ -4,7 +4,7 @@
 
 **Find out if you can protect your GPU income (or your GPU bill) from price swings, and by how much.**
 
-[**Live app**](https://lockrate.vercel.app) · [How it works](docs/how-it-works.md) · [Architecture](docs/architecture.md) · [Research](docs/research.md)
+[**Live app**](https://lockrate.vercel.app) · [User guide](docs/user-guide.md) · [What's live](docs/whats-real.md) · [How it works](docs/how-it-works.md) · [Architecture](docs/architecture.md) · [Research](docs/research.md)
 
 [![CI](https://github.com/Sakibimam/LockRate/actions/workflows/ci.yml/badge.svg)](https://github.com/Sakibimam/LockRate/actions/workflows/ci.yml)
 ![tests](https://img.shields.io/badge/tests-41%20passing-0e6b4f)
@@ -264,6 +264,8 @@ Access. A GPU host in Bangalore or Bangkok can install a wallet in five minutes 
 
 | File | Read it if you want… |
 | --- | --- |
+| [docs/user-guide.md](docs/user-guide.md) | who it helps, what you get, and how to use it step by step |
+| [docs/whats-real.md](docs/whats-real.md) | what's live from Injective, what's stored, and how to check it yourself |
 | [docs/how-it-works.md](docs/how-it-works.md) | the maths, step by step, with a worked example |
 | [docs/architecture.md](docs/architecture.md) | how the code fits together, with diagrams |
 | [docs/research.md](docs/research.md) | every competing venue and index, and who actually needs this |
