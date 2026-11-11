@@ -18,9 +18,13 @@ First public version.
 - Unsigned market and limit orders, and a reduce-only close, via Keplr or Leap
 
 **App**
-- Plain-language risk check: one answer, the facts behind it, what to do, and a replay
-- Place a hedge in four steps, off by default
+- Two-question start, then your GPUs, then one clear result: hedge, small hedge or don't
+- Result screen with three key numbers, the plan, a 15-month replay and the maths on demand
+- Connect wallet (Keplr) from the header
+- Hedge page in four steps, off by default
 - Monthly statement
+- Shareable example links: `/?example=<id>`
+- White theme on Radix UI with shadcn-style components
 - Optional AI: plain-English summary and rate-card reading, applied only after you confirm
 
 **Deploy**

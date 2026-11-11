@@ -35,7 +35,7 @@ flowchart TB
     UI --> SICI --> INJ --> INDEXER
     UI --> EXP --> LLM --> CLAUDE
     UI --> LS
-    LS -. "Place a hedge page" .-> INJ
+    LS -. "Hedge page" .-> INJ
     INJ -- "unsigned order" --> WAL --> CHAIN
 ```
 
@@ -91,9 +91,9 @@ flowchart LR
 
 | Route | Type | What it does |
 | --- | --- | --- |
-| `/` | dynamic page | Loads example profiles and price histories from `data/`, then hands them to the client dashboard |
-| `/live` | dynamic page | *Place a hedge*. Shows "switched off" unless `LOCKRATE_LIVE=1`. |
-| `/report` | dynamic page | Monthly statement from the plan saved in localStorage |
+| `/` | dynamic page | *Check risk*: start, then your GPUs, then the result. Loads examples from `data/`. `/?example=<id>` opens an example's result directly. |
+| `/live` | dynamic page | *Hedge*: four steps from plan to signed order. Shows "trading is off" unless `LOCKRATE_LIVE=1`. |
+| `/report` | dynamic page | *Statement* built from the plan saved in localStorage |
 | `/api/sici` | Node function | Live market snapshot. Cached 60s. Falls back to the last saved close if the indexer is down. |
 | `/api/explain` | Node function | AI summary, 60s timeout |
 | `/api/parse` | Node function | AI rate-card reader, 60s timeout |
@@ -126,7 +126,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as You
-    participant P as Place a hedge page
+    participant P as Hedge page
     participant E as engine + injective
     participant W as Wallet (Keplr/Leap)
     participant C as Injective chain

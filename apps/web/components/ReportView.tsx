@@ -1,6 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { FileText, TrendingDown, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useEffect, useMemo, useState } from "react";
 import { buildStatement } from "@lockrate/engine";
 import { load, type Saved } from "@/lib/store";
@@ -49,82 +54,117 @@ export function ReportView({ indexStart, indexEnd, from, to, daily }: Props) {
 
   if (!saved) {
     return (
-      <div className="max-w-xl">
-        <h1 className="text-3xl font-bold">Monthly statement</h1>
-        <p className="mt-3 text-[17px]">
-          There's nothing to report yet. Check your risk first and your statement will appear here.
-        </p>
-        <Link className="btn btn-primary mt-5" href="/">
-          Check my risk
-        </Link>
+      <div className="mx-auto max-w-md py-16 text-center">
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-100">
+          <FileText className="h-6 w-6 text-zinc-500" />
+        </span>
+        <h1 className="mt-5 text-2xl font-semibold tracking-tight text-zinc-900">No statement yet</h1>
+        <p className="mt-2 text-zinc-500">Check your risk first. Your statement shows up here.</p>
+        <Button asChild className="mt-6">
+          <Link href="/">Check my risk</Link>
+        </Button>
       </div>
     );
   }
 
   const plan = saved.result.plan;
   const indexChange = ((indexEnd - indexStart) / indexStart) * 100;
+  const up = indexChange >= 0;
   const fmtDate = (d: string) =>
-    new Date(`${d}T00:00:00Z`).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+    new Date(`${d}T00:00:00Z`).toLocaleDateString("en-US", { day: "numeric", month: "short", timeZone: "UTC" });
 
   return (
-    <div className="max-w-3xl space-y-12">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="text-3xl font-bold sm:text-[2.5rem]">Monthly statement</h1>
-        <p className="mt-3 text-[17px]">
-          From {fmtDate(from)} to {fmtDate(to)}, the GPU price index went {indexChange >= 0 ? "up" : "down"}{" "}
-          <span className="num">{num(Math.abs(indexChange))}%</span>, from <span className="num">{num(indexStart)}</span> to{" "}
-          <span className="num">{num(indexEnd)}</span>.
-        </p>
-        <p className="muted mt-2">
-          {plan.quantity > 0
-            ? `Your hedge: ${plan.side === "short" ? "sold" : "bought"} ${num(plan.quantity, 3)} SICI at ${num(plan.entryPrice)}, worth ${usd(plan.notionalUsd)}.`
-            : "You had no hedge in place."}{" "}
-          Based on {saved.profile.name.charAt(0).toLowerCase() + saved.profile.name.slice(1)}.
+        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">Statement</h1>
+        <p className="mt-1 text-zinc-500">
+          {fmtDate(from)} to {fmtDate(to)}
         </p>
       </div>
 
-      <section>
-        <h2 className="text-2xl font-bold">Your price per GPU-hour</h2>
-        <p className="muted mt-1">We filled these in from your settings. Change them to what you actually billed or paid.</p>
-        <div className="mt-4 grid max-w-md grid-cols-2 gap-4">
-          <label>
-            <span className="field-label">On {fmtDate(from)}</span>
-            <input className="num" type="number" step="0.01" value={ownStart} onChange={(e) => setOwnStart(Number(e.target.value))} />
-          </label>
-          <label>
-            <span className="field-label">On {fmtDate(to)}</span>
-            <input className="num" type="number" step="0.01" value={ownEnd} onChange={(e) => setOwnEnd(Number(e.target.value))} />
-          </label>
-        </div>
-      </section>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-sm text-zinc-500">GPU index</p>
+            <p className="tabular mt-2 flex items-center gap-2 text-2xl font-semibold text-zinc-900">
+              {up ? <TrendingUp className="h-5 w-5 text-emerald-600" /> : <TrendingDown className="h-5 w-5 text-rose-600" />}
+              {up ? "+" : "−"}
+              {num(Math.abs(indexChange))}%
+            </p>
+            <p className="tabular mt-0.5 text-xs text-zinc-500">
+              {num(indexStart)} to {num(indexEnd)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-sm text-zinc-500">Your hedge</p>
+            <p className="tabular mt-2 text-2xl font-semibold text-zinc-900">
+              {plan.quantity > 0 ? `${plan.side === "short" ? "Sell" : "Buy"} ${num(plan.quantity, 1)} SICI` : "None"}
+            </p>
+            <p className="mt-0.5 text-xs text-zinc-500">{plan.quantity > 0 ? `${usd(plan.notionalUsd)}, no leverage` : "Your check said not to hedge"}</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {statement && (
-        <section>
-          <h2 className="text-2xl font-bold">How it worked out</h2>
-          <dl className="facts mt-4">
-            <div>
-              <dt>Change from your prices alone</dt>
-              <dd>{signed(statement.actualPnlUsd)}</dd>
-            </div>
-            <div>
-              <dt>Hedge result, after fees and holding costs</dt>
-              <dd>{signed(statement.hedgePnlUsd)}</dd>
-            </div>
-            <div>
-              <dt className="font-semibold">Overall</dt>
-              <dd className="text-lg">{signed(statement.hedgedPnlUsd)}</dd>
-            </div>
-          </dl>
-          <details className="mt-6">
-            <summary>Line-by-line breakdown</summary>
-            <ul className="muted mt-3 space-y-1 text-sm">
-              {statement.lines.map((l, i) => (
-                <li key={i}>{l}</li>
-              ))}
-            </ul>
-          </details>
-        </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Result</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="tabular divide-y divide-zinc-100 text-sm">
+              <div className="flex justify-between py-3">
+                <dt className="text-zinc-500">From your prices alone</dt>
+                <dd className="font-medium text-zinc-900">{signed(statement.actualPnlUsd)}</dd>
+              </div>
+              <div className="flex justify-between py-3">
+                <dt className="text-zinc-500">From the hedge, after costs</dt>
+                <dd className="font-medium text-zinc-900">{signed(statement.hedgePnlUsd)}</dd>
+              </div>
+              <div className="flex justify-between py-3">
+                <dt className="font-medium text-zinc-900">Total</dt>
+                <dd className="text-lg font-semibold text-zinc-900">{signed(statement.hedgedPnlUsd)}</dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
       )}
+
+      <Card>
+        <CardContent className="py-1">
+          <Accordion type="single" collapsible>
+            <AccordionItem value="rates">
+              <AccordionTrigger>Adjust your prices</AccordionTrigger>
+              <AccordionContent>
+                <p className="mb-3 text-xs text-zinc-500">Filled in from your settings. Change to what you actually billed or paid per GPU-hour.</p>
+                <div className="grid max-w-sm grid-cols-2 gap-3">
+                  <label className="text-xs text-zinc-500">
+                    {fmtDate(from)}
+                    <Input className="mt-1" type="number" step="0.01" value={ownStart} onChange={(e) => setOwnStart(Number(e.target.value))} />
+                  </label>
+                  <label className="text-xs text-zinc-500">
+                    {fmtDate(to)}
+                    <Input className="mt-1" type="number" step="0.01" value={ownEnd} onChange={(e) => setOwnEnd(Number(e.target.value))} />
+                  </label>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            {statement && (
+              <AccordionItem value="lines">
+                <AccordionTrigger>Full breakdown</AccordionTrigger>
+                <AccordionContent>
+                  <ul className="space-y-1 text-sm text-zinc-600">
+                    {statement.lines.map((l, i) => (
+                      <li key={i}>{l}</li>
+                    ))}
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+            )}
+          </Accordion>
+        </CardContent>
+      </Card>
     </div>
   );
 }

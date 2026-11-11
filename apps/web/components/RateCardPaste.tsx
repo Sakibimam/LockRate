@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { FileText, LoaderCircle } from "lucide-react";
 import type { Profile } from "@lockrate/engine";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/input";
+import { InfoTip } from "@/components/ui/tooltip";
 
 interface Draft {
   role: "operator" | "buyer";
@@ -26,11 +30,11 @@ export function RateCardPaste({ onDraft }: { onDraft: (p: Partial<Profile>) => v
     try {
       const r = await fetch("/api/parse", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) });
       const j = (await r.json()) as { draft?: Draft; error?: string };
-      if (r.status === 503) throw new Error("Reading pasted text isn't set up on this server. Fill in the form instead.");
-      if (!r.ok || !j.draft) throw new Error(j.error ?? "Couldn't read that text. Fill in the form instead.");
+      if (r.status === 503) throw new Error("Not available on this server yet. Fill the form instead.");
+      if (!r.ok || !j.draft) throw new Error("Couldn't read that. Fill the form instead.");
       setDraft(j.draft);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Couldn't read that text.");
+      setErr(e instanceof Error ? e.message : "Couldn't read that.");
     } finally {
       setBusy(false);
     }
@@ -56,56 +60,38 @@ export function RateCardPaste({ onDraft }: { onDraft: (p: Partial<Profile>) => v
 
   return (
     <div>
-      <label className="field-label" htmlFor="ratecard">
-        Fill the form from a rate card
-      </label>
-      <textarea
-        id="ratecard"
-        className="text-sm"
-        rows={4}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="Paste a price list, invoice or contract summary"
-      />
-      <p className="hint">You'll see what we found before anything changes.</p>
-      <div className="mt-2 flex items-center gap-3">
-        <button type="button" className="btn" disabled={busy || text.trim().length < 20} onClick={go}>
-          {busy ? "Reading…" : "Read rate card"}
-        </button>
+      <div className="mb-2 flex items-center gap-1.5 text-sm font-medium text-zinc-900">
+        Fill from a price list
+        <InfoTip>Paste an invoice or price list. You'll check what we found before anything changes.</InfoTip>
       </div>
-      {err && <p className="t-bad mt-2 text-sm">{err}</p>}
+      <Textarea rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder="Paste text here" />
+      <Button variant="outline" size="sm" className="mt-2" disabled={busy || text.trim().length < 20} onClick={go}>
+        {busy ? <LoaderCircle className="animate-spin" /> : <FileText />}
+        Read it
+      </Button>
+      {err && <p className="mt-2 text-xs text-rose-600">{err}</p>}
       {draft && (
-        <div className="mt-4 space-y-3 text-sm">
-          <p className="font-semibold">Here's what we found</p>
-          <ul className="space-y-2">
+        <div className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
+          <p className="font-medium text-zinc-900">We found</p>
+          <ul className="mt-2 space-y-2">
             {draft.gpus.map((g, i) => (
               <li key={i}>
-                {g.count} × {g.model}
+                <span className="font-medium">
+                  {g.count} × {g.model}
+                </span>
                 {g.rateUsd != null ? ` at $${g.rateUsd}/hr` : ""}
-                <span className="muted block text-xs">From: “{g.evidence}”</span>
+                <span className="block text-xs text-zinc-500">“{g.evidence}”</span>
               </li>
             ))}
-            {draft.avgRateUsd != null && <li>Average price: ${draft.avgRateUsd}/hr</li>}
-            {draft.spotShare != null && <li>At market prices: {Math.round(draft.spotShare * 100)}%</li>}
-            {draft.utilisation != null && <li>Hours in use: {Math.round(draft.utilisation * 100)}%</li>}
           </ul>
-          {draft.uncertain.length > 0 && (
-            <div className="t-warn">
-              <p>Check these yourself:</p>
-              <ul className="ml-4 list-disc">
-                {draft.uncertain.map((u, i) => (
-                  <li key={i}>{u}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          <div className="flex gap-2">
-            <button type="button" className="btn btn-primary" onClick={() => apply(draft)}>
-              Fill in the form
-            </button>
-            <button type="button" className="btn" onClick={() => setDraft(null)}>
+          {draft.uncertain.length > 0 && <p className="mt-2 text-xs text-amber-700">Double-check: {draft.uncertain.join(", ")}</p>}
+          <div className="mt-3 flex gap-2">
+            <Button size="sm" onClick={() => apply(draft)}>
+              Use this
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setDraft(null)}>
               Discard
-            </button>
+            </Button>
           </div>
         </div>
       )}

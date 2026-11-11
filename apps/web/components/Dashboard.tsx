@@ -2,15 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { run, type Limits, type Profile, type SeriesPoint } from "@lockrate/engine";
-import type { SiciApi } from "@/app/api/sici/route";
 import { save } from "@/lib/store";
-import { ProfileForm } from "./ProfileForm";
-import { MarketLine } from "./MarketLine";
-import { Answer } from "./Answer";
-import { PlanCard } from "./PlanCard";
-import { SimChart } from "./SimChart";
-import { Details } from "./Details";
-import { ExplainBox } from "./ExplainBox";
+import { useMarket } from "@/lib/market";
+import { StartStep } from "./StartStep";
+import { FleetStep } from "./FleetStep";
+import { ResultView } from "./ResultView";
 
 export interface ProxyMap {
   [name: string]: { points: SeriesPoint[]; note: string; unit: string };
@@ -25,23 +21,28 @@ interface Props {
   dataGeneratedAt: string;
 }
 
+type Step = "start" | "fleet" | "result";
+
+/** sensible starting point for someone entering their own numbers */
+function blankProfile(role: Profile["role"]): { profile: Profile; proxy: string } {
+  return role === "operator"
+    ? {
+        profile: { id: "custom", name: "My GPUs", role, gpus: [{ model: "H100", count: 16 }], avgRateUsd: 2.1, spotShare: 1, utilisation: 0.75 },
+        proxy: "h100-spot-marketplace",
+      }
+    : {
+        profile: { id: "custom", name: "My GPUs", role, gpus: [{ model: "H100", count: 16 }], avgRateUsd: 2.6, spotShare: 0.6, utilisation: 0.8 },
+        proxy: "h100-h200-on-demand-buyer",
+      };
+}
+
 export function Dashboard({ profiles, proxies, index, daily, limits }: Props) {
+  const [step, setStep] = useState<Step>("start");
   const [profile, setProfile] = useState<Profile>(profiles[0] as Profile);
   const [own, setOwn] = useState<SeriesPoint[]>(proxies[profiles[0]?.proxy ?? ""]?.points ?? []);
   const [ownLabel, setOwnLabel] = useState<string>(profiles[0]?.proxy ?? "custom");
   const [scale, setScale] = useState(1);
-  const [market, setMarket] = useState<SiciApi | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    fetch("/api/sici")
-      .then((r) => r.json())
-      .then((m: SiciApi) => alive && setMarket(m))
-      .catch(() => alive && setMarket(null));
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const market = useMarket();
 
   const lastClose = daily.at(-1)?.c ?? 100;
   const snapshot = useMemo(
@@ -57,56 +58,70 @@ export function Dashboard({ profiles, proxies, index, daily, limits }: Props) {
   const result = useMemo(() => run({ profile, own, index, market: snapshot, limits, scale }), [profile, own, index, snapshot, limits, scale]);
 
   useEffect(() => {
-    save({ profile, own, result, marketPrice: snapshot.price, savedAt: Date.now() });
-  }, [profile, own, result, snapshot.price]);
+    if (step === "result") save({ profile, own, result, marketPrice: snapshot.price, savedAt: Date.now() });
+  }, [step, profile, own, result, snapshot.price]);
 
-  function pickProfile(p: Profile) {
-    setProfile(p);
-    if (p.proxy && proxies[p.proxy]) {
-      setOwn(proxies[p.proxy]!.points);
-      setOwnLabel(p.proxy);
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [step]);
+
+  // shareable deep link: /?example=<profile id> opens that example's result
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("example");
+    const p = id ? profiles.find((x) => x.id === id) : undefined;
+    if (p) startWithExample(p);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function pickHistory(key: string) {
+    if (proxies[key]) {
+      setOwn(proxies[key]!.points);
+      setOwnLabel(key);
     }
   }
 
-  const stale = market ? !market.fresh : true;
+  function startWithRole(role: Profile["role"]) {
+    const b = blankProfile(role);
+    setProfile(b.profile);
+    pickHistory(b.proxy);
+    setStep("fleet");
+  }
+
+  function startWithExample(p: Profile) {
+    setProfile(p);
+    if (p.proxy) pickHistory(p.proxy);
+    setStep("result");
+  }
+
+  if (step === "start") return <StartStep profiles={profiles} onRole={startWithRole} onExample={startWithExample} />;
+
+  if (step === "fleet")
+    return (
+      <FleetStep
+        profile={profile}
+        onProfile={setProfile}
+        proxies={proxies}
+        ownLabel={ownLabel}
+        onOwn={(pts, label) => {
+          setOwn(pts);
+          setOwnLabel(label);
+        }}
+        scale={scale}
+        onScale={setScale}
+        onBack={() => setStep("start")}
+        onDone={() => setStep("result")}
+      />
+    );
 
   return (
-    <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[360px_minmax(0,1fr)]">
-      <div className="min-w-0 lg:sticky lg:top-6">
-        <ProfileForm
-          profiles={profiles}
-          profile={profile}
-          onProfile={setProfile}
-          onPick={pickProfile}
-          proxies={proxies}
-          ownLabel={ownLabel}
-          onOwn={(pts, label) => {
-            setOwn(pts);
-            setOwnLabel(label);
-          }}
-          scale={scale}
-          onScale={setScale}
-        />
-      </div>
-
-      <div className="min-w-0 space-y-12">
-        <div className="space-y-4">
-          <MarketLine market={market} fallbackPrice={lastClose} />
-          <Answer fit={result.fit} exposure={result.exposure} plan={result.plan} profile={profile} />
-        </div>
-        <PlanCard plan={result.plan} fit={result.fit} limits={limits} stale={stale} />
-        <SimChart sim={result.sim} hedged={result.plan.quantity > 0} />
-        <ExplainBox profile={profile} result={result} />
-        <Details
-          fit={result.fit}
-          exposure={result.exposure}
-          plan={result.plan}
-          sim={result.sim}
-          limits={limits}
-          ownLabel={ownLabel}
-          ownMonths={own.length}
-        />
-      </div>
-    </div>
+    <ResultView
+      profile={profile}
+      result={result}
+      limits={limits}
+      market={market}
+      ownLabel={ownLabel}
+      ownMonths={own.length}
+      onEdit={() => setStep("fleet")}
+    />
   );
 }

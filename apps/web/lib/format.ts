@@ -15,3 +15,12 @@ export function ago(ms: number, now = Date.now()): string {
   if (h < 48) return `${h} h ago`;
   return `${Math.round(h / 24)} d ago`;
 }
+
+/** $70.6k, $1.2M, $706 */
+export function usdShort(x: number): string {
+  const a = Math.abs(x);
+  const sign = x < 0 ? "-" : "";
+  if (a >= 1_000_000) return `${sign}$${(a / 1_000_000).toFixed(a >= 10_000_000 ? 0 : 1)}M`;
+  if (a >= 10_000) return `${sign}$${(a / 1_000).toFixed(a >= 100_000 ? 0 : 1)}k`;
+  return `${sign}${usd(a)}`;
+}

@@ -1,40 +1,34 @@
-import type { Metadata } from "next";
-import { Bricolage_Grotesque, Public_Sans } from "next/font/google";
-import { Nav } from "@/components/Nav";
+import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
+import { Header } from "@/components/Header";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
-const bricolage = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-bricolage", weight: ["500", "700"] });
-const publicSans = Public_Sans({ subsets: ["latin"], variable: "--font-public" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Lockrate",
-  description: "Find out whether your GPU rental prices can be hedged, and by how much.",
+  title: "Lockrate · Protect your GPU income from price swings",
+  description: "Find out in 30 seconds if a hedge would protect your GPU income or GPU bill.",
 };
 
-const live = process.env.NEXT_PUBLIC_LOCKRATE_LIVE === "1";
+export const viewport: Viewport = { themeColor: "#ffffff", colorScheme: "light" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${bricolage.variable} ${publicSans.variable}`}>
-      <body className="min-h-screen">
-        <header className="border-b" style={{ borderColor: "var(--line)" }}>
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-4">
-            <a href="/" className="display text-xl font-bold">
-              Lockrate
-            </a>
-            <Nav />
-          </div>
-        </header>
-        <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
-        <footer className="mx-auto max-w-6xl px-4 pb-10 text-sm muted">
-          <p className="max-w-2xl">
-            {live ? "Live trading is switched on." : "Practice mode. Nothing is traded."} Lockrate never holds your keys or
-            funds, and this is not financial advice.{" "}
-            <a className="underline" href="https://github.com/Sakibimam/LockRate" target="_blank" rel="noreferrer">
-              Source code
-            </a>
-          </p>
-        </footer>
+    <html lang="en" className={inter.variable}>
+      <body className="min-h-screen font-sans">
+        <TooltipProvider delayDuration={150}>
+          <Header />
+          <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">{children}</main>
+          <footer className="border-t border-zinc-100">
+            <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs text-zinc-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <p>Practice mode. Not financial advice. Lockrate never holds your keys or funds.</p>
+              <a className="hover:text-zinc-900" href="https://github.com/Sakibimam/LockRate" target="_blank" rel="noreferrer">
+                GitHub
+              </a>
+            </div>
+          </footer>
+        </TooltipProvider>
       </body>
     </html>
   );

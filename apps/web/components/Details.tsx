@@ -1,6 +1,6 @@
 import { GPU_LABELS, type Exposure, type FitResult, type HedgePlan, type Limits, type SimResult } from "@lockrate/engine";
 import { num, pct, signed, usd } from "@/lib/format";
-import { prettyProxy } from "@/lib/words";
+import { capitalise, prettyProxy } from "@/lib/words";
 
 interface Props {
   fit: FitResult;
@@ -12,174 +12,118 @@ interface Props {
   ownMonths: number;
 }
 
+function Table({ rows, head }: { rows: Array<[React.ReactNode, ...React.ReactNode[]]>; head?: string[] }) {
+  return (
+    <table className="tabular w-full text-sm">
+      {head && (
+        <thead>
+          <tr className="text-left text-xs text-zinc-500">
+            {head.map((h, i) => (
+              <th key={i} className={`pb-2 font-medium ${i ? "text-right" : ""}`}>
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+      )}
+      <tbody>
+        {rows.map((r, i) => (
+          <tr key={i} className="border-t border-zinc-100">
+            {r.map((c, j) => (
+              <td key={j} className={`py-2 ${j ? "text-right font-medium text-zinc-900" : "text-zinc-600"}`}>
+                {c}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function Section({ title, note, children }: { title: string; note?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h4 className="text-sm font-semibold text-zinc-900">{title}</h4>
+      {note && <p className="mt-1 text-xs leading-relaxed text-zinc-500">{note}</p>}
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
 export function Details({ fit, exposure, plan, sim, limits, ownLabel, ownMonths }: Props) {
   const pos = Math.max(0, Math.min(1, (fit.score + 1) / 2));
   const t = fit.thresholds;
   return (
-    <details className="border-t pt-6" style={{ borderColor: "var(--line)" }}>
-      <summary className="text-lg">How this was worked out</summary>
-
-      <div className="mt-6 grid gap-10 text-sm md:grid-cols-2">
-        <div>
-          <h3 className="text-base font-bold">Price match</h3>
-          <p className="muted mt-1">
-            We compare how your prices and the SICI GPU index changed month to month. Above {t.hedge} we suggest a full hedge,
-            above {t.partial} a small one.
-          </p>
-          <div className="relative mt-4 h-2 rounded-full" style={{ background: "var(--line)" }}>
-            <div className="absolute inset-y-0 w-0.5" style={{ left: `${((t.partial + 1) / 2) * 100}%`, background: "var(--warn)" }} />
-            <div className="absolute inset-y-0 w-0.5" style={{ left: `${((t.hedge + 1) / 2) * 100}%`, background: "var(--ok)" }} />
-            <div className="absolute -top-1.5 h-5 w-1.5 rounded" style={{ left: `calc(${pos * 100}% - 3px)`, background: "var(--fg)" }} />
-          </div>
-          <div className="muted mt-1 flex justify-between text-xs">
-            <span>Opposite</span>
-            <span>Identical</span>
-          </div>
-          <table className="plain mt-4">
-            <tbody className="num">
-              <tr>
-                <td>Correlation</td>
-                <td className="r">{fit.score.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td>Beta, used for sizing</td>
-                <td className="r">{fit.beta.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td>R²</td>
-                <td className="r">{fit.r2.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td>Months compared</td>
-                <td className="r">{fit.n}</td>
-              </tr>
-              <tr>
-                <td>Your price source</td>
-                <td className="r">{ownLabel === "custom" ? `Pasted, ${ownMonths} months` : prettyProxy(ownLabel)}</td>
-              </tr>
-            </tbody>
-          </table>
-          {fit.reasons.length > 0 && (
-            <ul className="muted mt-3 list-disc space-y-1 pl-5">
-              {fit.reasons.map((r, i) => (
-                <li key={i}>{r.charAt(0).toUpperCase() + r.slice(1)}</li>
-              ))}
-            </ul>
-          )}
+    <div className="grid gap-8 md:grid-cols-2">
+      <Section title="Index match" note={`Correlation of monthly price changes. ${t.hedge}+ means hedge, ${t.partial}+ means a small hedge.`}>
+        <div className="relative h-2 rounded-full bg-gradient-to-r from-rose-200 via-amber-200 to-emerald-200">
+          <div className="absolute -top-1 h-4 w-1.5 rounded-full bg-zinc-900" style={{ left: `calc(${pos * 100}% - 3px)` }} />
         </div>
-
-        <div>
-          <h3 className="text-base font-bold">Your cards</h3>
-          <p className="muted mt-1">
-            The index covers H100, B200, H200, A100 and RTX 4090. {pct(exposure.basketOverlap, 0)} of your GPU-hours are on
-            those cards.
-          </p>
-          <table className="plain mt-4">
-            <thead>
-              <tr>
-                <th>Card</th>
-                <th className="r">Hours a month</th>
-                <th className="r">Value</th>
-              </tr>
-            </thead>
-            <tbody className="num">
-              {exposure.byModel.map((m, i) => (
-                <tr key={i} className={m.inBasket ? "" : "muted"}>
-                  <td>
-                    {GPU_LABELS[m.model]}
-                    {!m.inBasket && <span className="block text-xs">Not in the index</span>}
-                  </td>
-                  <td className="r">{num(m.gpuHours, 0)}</td>
-                  <td className="r">{usd(m.notionalUsd)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-1 flex justify-between text-[11px] text-zinc-400">
+          <span>Opposite</span>
+          <span>Identical</span>
         </div>
-
-        <div>
-          <h3 className="text-base font-bold">Replay results</h3>
-          <table className="plain mt-3">
-            <thead>
-              <tr>
-                <th />
-                <th className="r">Without</th>
-                <th className="r">With hedge</th>
-              </tr>
-            </thead>
-            <tbody className="num">
-              <tr>
-                <td>Total change</td>
-                <td className="r">{signed(sim.unhedged.total)}</td>
-                <td className="r">{signed(sim.hedged.total)}</td>
-              </tr>
-              <tr>
-                <td>Worst month</td>
-                <td className="r">{usd(sim.unhedged.worst)}</td>
-                <td className="r">{usd(sim.hedged.worst)}</td>
-              </tr>
-              <tr>
-                <td>Typical monthly swing</td>
-                <td className="r">{usd(sim.unhedged.stdev)}</td>
-                <td className="r">{usd(sim.hedged.stdev)}</td>
-              </tr>
-            </tbody>
-          </table>
-          <p className="muted mt-2">
-            The hedge is held at one size the whole time. If it lost money overall, that cost was {usd(sim.costOfHedgeUsd)}.
-          </p>
+        <div className="mt-3">
+          <Table
+            rows={[
+              ["Correlation", fit.score.toFixed(2)],
+              ["Beta (used for sizing)", fit.beta.toFixed(2)],
+              ["R²", fit.r2.toFixed(2)],
+              ["Months compared", fit.n],
+              ["Your prices", ownLabel === "custom" ? `Pasted, ${ownMonths} months` : prettyProxy(ownLabel)],
+            ]}
+          />
         </div>
+      </Section>
 
-        <div>
-          <h3 className="text-base font-bold">Order details and limits</h3>
-          <table className="plain mt-3">
-            <tbody className="num">
-              {plan.quantity > 0 && (
-                <>
-                  <tr>
-                    <td>Side</td>
-                    <td className="r capitalize">{plan.side}</td>
-                  </tr>
-                  <tr>
-                    <td>Entry price</td>
-                    <td className="r">{num(plan.entryPrice)}</td>
-                  </tr>
-                  <tr>
-                    <td>Position value</td>
-                    <td className="r">{usd(plan.notionalUsd)}</td>
-                  </tr>
-                </>
-              )}
-              <tr>
-                <td>Largest hedge allowed</td>
-                <td className="r">{usd(limits.maxNotionalUsd)}</td>
-              </tr>
-              <tr>
-                <td>Leverage</td>
-                <td className="r">None (1x)</td>
-              </tr>
-              <tr>
-                <td>Market data must be newer than</td>
-                <td className="r">{limits.staleDataMinutes} min</td>
-              </tr>
-            </tbody>
-          </table>
-          {(plan.limitsApplied.length > 0 || plan.warnings.length > 0) && (
-            <ul className="mt-3 list-disc space-y-1 pl-5">
-              {plan.limitsApplied.map((l, i) => (
-                <li key={`l${i}`} className="t-warn">
-                  {l.charAt(0).toUpperCase() + l.slice(1)}
-                </li>
-              ))}
-              {plan.warnings.map((w, i) => (
-                <li key={`w${i}`} className="muted">
-                  {w.charAt(0).toUpperCase() + w.slice(1)}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </details>
+      <Section title="Your GPUs" note={`${pct(exposure.basketOverlap, 0)} of your GPU-hours are on cards the index covers (H100, B200, H200, A100, RTX 4090).`}>
+        <Table
+          head={["GPU", "Hours / mo", "Value / mo"]}
+          rows={exposure.byModel.map((m) => [
+            <span key="n" className={m.inBasket ? "" : "text-zinc-400"}>
+              {GPU_LABELS[m.model]}
+              {!m.inBasket && " (not in index)"}
+            </span>,
+            num(m.gpuHours, 0),
+            usd(m.notionalUsd),
+          ])}
+        />
+      </Section>
+
+      <Section title="Replay" note={`One position held for all ${sim.periods.length} months. If the hedge lost money overall, it cost ${usd(sim.costOfHedgeUsd)}.`}>
+        <Table
+          head={["", "Without", "With hedge"]}
+          rows={[
+            ["Total change", signed(sim.unhedged.total), signed(sim.hedged.total)],
+            ["Worst month", usd(sim.unhedged.worst), usd(sim.hedged.worst)],
+            ["Typical swing", usd(sim.unhedged.stdev), usd(sim.hedged.stdev)],
+          ]}
+        />
+      </Section>
+
+      <Section title="Safety limits">
+        <Table
+          rows={[
+            ...(plan.quantity > 0
+              ? ([
+                  ["Side", capitalise(plan.side)],
+                  ["Entry price", num(plan.entryPrice)],
+                ] as Array<[React.ReactNode, React.ReactNode]>)
+              : []),
+            ["Largest hedge allowed", usd(limits.maxNotionalUsd)],
+            ["Leverage", "None (1x)"],
+            ["Market data must be newer than", `${limits.staleDataMinutes} min`],
+          ]}
+        />
+        {fit.reasons.length > 0 && (
+          <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-zinc-500">
+            {fit.reasons.map((r, i) => (
+              <li key={i}>{capitalise(r)}</li>
+            ))}
+          </ul>
+        )}
+      </Section>
+    </div>
   );
 }

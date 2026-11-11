@@ -12,7 +12,7 @@
 ![next](https://img.shields.io/badge/next.js-16-000000?logo=next.js)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
-<img src="docs/images/check-my-risk.png" alt="Lockrate showing a 'Yes, a hedge would protect you' answer for an AI team renting 40 GPUs" width="900">
+<img src="docs/images/result.png" alt="Lockrate result screen: 'You should hedge', $70.6k at risk a month, a strong index match, and a plan to sell SICI contracts" width="900">
 
 </div>
 
@@ -53,7 +53,11 @@ When you're ready, it builds the order and hands it to **your own wallet** to ap
 
 ## Try it
 
-**Online:** open **[lockrate.vercel.app](https://lockrate.vercel.app)**, pick one of the examples, and change the numbers. Nothing is traded: the public site runs in practice mode.
+**Online:** open **[lockrate.vercel.app](https://lockrate.vercel.app)**. Pick *I rent out GPUs* or *I pay for GPUs*, enter your cards, and you get an answer. Nothing is traded: the public site runs in practice mode.
+
+<img src="docs/images/start.png" alt="Lockrate start screen: 'Will GPU price swings hurt your business?' with two choices" width="900">
+
+Every example has its own link, so you can share a result: [64 H100 host](https://lockrate.vercel.app/?example=marketplace-host-64-h100) · [Neocloud on contracts](https://lockrate.vercel.app/?example=neocloud-80-contracted) · [4090 + A100 provider](https://lockrate.vercel.app/?example=decentralised-provider-4090) · [AI team](https://lockrate.vercel.app/?example=ai-team-inference-buyer)
 
 **The four examples are worth clicking through.** They were picked to show every possible answer:
 
@@ -123,13 +127,13 @@ All optional. Defaults are safe.
 
 | Variable | Default | What it does |
 | --- | --- | --- |
-| `LOCKRATE_LIVE` | `0` | `1` switches on the *Place a hedge* page. Leave it off unless you mean it. |
+| `LOCKRATE_LIVE` | `0` | `1` switches on trading on the *Hedge* page. Leave it off unless you mean it. |
 | `INJECTIVE_NETWORK` | `mainnet` | `mainnet` or `testnet` |
 | `SICI_MARKET_ID` | SICI/USDC perp | The market to read and trade |
 | `MAX_NOTIONAL_USD` | `50000` | Largest hedge the app will ever build |
 | `MAX_PREMIUM_USD_PER_MONTH` | `2000` | Budget cap for options, once they reach mainnet |
 | `STALE_DATA_MINUTES` | `180` | Refuses to plan an order if the last trade is older than this |
-| `ANTHROPIC_API_KEY` | none | Turns on *Explain in plain words* and reading pasted rate cards. Everything else works without it. |
+| `ANTHROPIC_API_KEY` | none | Turns on *Explain this to me* and *Fill from a price list*. Everything else works without it. |
 
 Leverage isn't in this list on purpose. It's fixed at 1x in code and can't be raised through config.
 
@@ -137,10 +141,11 @@ Leverage isn't in this list on purpose. It's fixed at 1x in code and can't be ra
 
 ```
 lockrate/
-├── apps/web/               the website (Next.js 16, React 19, Tailwind 4)
+├── apps/web/               the website (Next.js 16, React 19, Tailwind 4, Radix UI)
 │   ├── app/                pages: risk check, place a hedge, monthly statement
 │   │   └── api/            sici (live market), explain + parse (optional AI)
-│   ├── components/         the UI, one file per section
+│   ├── components/         the screens: start, your GPUs, result, hedge, statement
+│   │   └── ui/             shadcn-style building blocks on Radix (button, card, slider…)
 │   └── lib/                reads data/, saves your inputs in the browser, wallet
 ├── packages/
 │   ├── engine/             all the maths. zero dependencies, 41 tests
@@ -158,7 +163,7 @@ More detail, with diagrams, is in **[docs/architecture.md](docs/architecture.md)
 
 This touches real money, so the guardrails are in code, not in good intentions:
 
-- **Practice mode by default.** The *Place a hedge* page doesn't exist until someone sets `LOCKRATE_LIVE=1`.
+- **Practice mode by default.** The *Hedge* page can't trade until someone sets `LOCKRATE_LIVE=1`.
 - **No leverage.** 1x is hard-coded.
 - **Hard size cap.** Checked when the plan is made, and checked again when the order is built.
 - **Stale-data guard.** No order if the market hasn't traded recently.
@@ -226,7 +231,7 @@ Not to get the answer. The risk check, the replay and the monthly statement need
 <details>
 <summary><b>Can I use my own prices instead of the examples?</b></summary>
 
-Yes. Under *More settings*, choose "My own, pasted in" and paste one month per line, like `2026-03, 2.15`. You need at least 3 months, and 6 or more for a confident answer.
+Yes. On the *Your GPUs* step, open *More options*, set *Your past prices* to "Paste my own", and paste one month per line, like `2026-03, 2.15`. You need at least 3 months, and 6 or more for a confident answer.
 </details>
 
 <details>

@@ -21,4 +21,4 @@ Especially interesting:
 
 ## Live trading
 
-The *Place a hedge* page is off unless `LOCKRATE_LIVE=1` is set. The public demo at lockrate.vercel.app runs with it off.
+Trading on the *Hedge* page is off unless `LOCKRATE_LIVE=1` is set. The public demo at lockrate.vercel.app runs with it off.

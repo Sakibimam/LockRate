@@ -2,24 +2,26 @@
 
 Open **https://lockrate.vercel.app**, or run `pnpm dev` and open http://localhost:3000.
 
-1. **The line at the top of the answer** is the live SICI price from Injective mainnet, its change today, and how fresh it is. If the market hasn't traded in 3 hours, placing a hedge is switched off.
+1. **The pill in the header** shows the live SICI GPU index from Injective mainnet. The dot is green when the data is fresh.
 
-2. **Pick "Marketplace host, 64 H100s, 100% spot".** The answer turns green: *Yes, a hedge would protect you.* About $70k a month moves with the market, and a 1% drop costs $706 a month. The price match is *Strong*. *What to do* says to sell about 464 SICI with no leverage. That's the $50k cap, not the whole business. The replay shows month-to-month swings about 61% smaller.
+2. **Start screen.** One question: *I rent out GPUs* or *I pay for GPUs*. Or tap an example.
 
-3. **Switch to "Neocloud, 512 H100s, 80% on 1y contracts".** The answer turns red: *No. A hedge wouldn't protect you.* Its contract prices rose while the index fell, so the price match is *Opposite*. *What to do* says nothing for now. **This is the slide that matters.**
+3. **Tap "64 H100 host".** Green: *You should hedge.* Three numbers: $70.6k at risk a month, −$706 for every 1% drop, and a *Strong* index match. The plan card says to sell 463.6 SICI, capped at $50k, with no leverage. The replay is 61% calmer.
 
-4. **"Decentralised provider, 4090 + A100 mix".** Amber: *a small hedge could help a little.* A fifth of the fleet's hours are on cards that aren't in the index. The half-size hedge only removes about 12% of the swings, and the leftover risk is on screen.
+4. **Back, then "Neocloud on contracts".** Red: *Don't hedge.* Its contract prices rose while the index fell, so the match is *Opposite*. The plan card says *Nothing to do*. **This is the slide that matters.**
 
-5. **"AI team, on-demand inference buyer".** The same engine, pointed the other way. This business *pays* more when prices rise, so the plan is to **buy** about 285 SICI.
+5. **"4090 + A100 provider".** Amber: *A small hedge could help.* Part of the fleet isn't in the index, so the hedge only takes about 12% of the swings out.
 
-6. **Drag "Income at market prices" on any example.** The dollars and the hedge size move, but the price match doesn't. How much risk you have and whether the index tracks it are separate questions.
+6. **"AI team buying GPUs".** The same engine, the other way round. This business pays more when prices rise, so it **buys** 284.9 SICI.
 
-7. **More settings → Your past prices → "My own, pasted in".** Paste a few months like `2026-03, 2.15`. The answer recomputes on your own data.
+7. **Edit**, then drag *Paid at market price.* The dollars and hedge size move, but the index match doesn't. How much risk you have and whether the index tracks it are separate questions.
 
-8. **Explain this in plain words.** The AI writes a summary of the numbers above. It works only if an API key is set, and everything else works without one.
+8. **More options → Your past prices → Paste my own.** Paste a few months like `2026-03, 2.15` and the answer recomputes on your data.
 
-9. **How this was worked out** opens the maths: price match bar, beta, per-card table, replay statistics, limits.
+9. **How we worked this out** opens the maths: the match bar, beta, the per-GPU table, replay statistics and the safety limits.
 
-10. **Monthly statement** shows what the index did since launch, what your price did, and what the hedge would have returned after costs.
+10. **Explain this to me** gets a plain-English summary from AI. It only works if an API key is set.
 
-11. **Place a hedge** is switched off on the public site. With `LOCKRATE_LIVE=1` and Keplr: connect, tick the two boxes, check the order, read the checks, approve. Then use *Close an open hedge* to read the position back and build a reduce-only close.
+11. **Statement** shows what the index did since launch and what the hedge would have returned after costs.
+
+12. **Connect wallet**, then **Hedge.** Trading is off on the public site. With `LOCKRATE_LIVE=1`: confirm the two boxes, check the order, read the checks, and approve in Keplr. *Close an open hedge* reads the position back and builds a reduce-only close.
