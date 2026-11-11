@@ -18,7 +18,7 @@
 
 ---
 
-## The problem, in plain English
+## The problem
 
 Renting out GPUs is a business where **the price changes every hour**. If you own 64 H100s and list them on a marketplace, the market decides what you earn. In the first half of 2026, H100 rental prices fell 20 to 40% from peak to trough. Nobody sent you a warning.
 
