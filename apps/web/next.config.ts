@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const config: NextConfig = {
+  devIndicators: false,
   transpilePackages: ["@lockrate/engine", "@lockrate/injective", "@lockrate/explain"],
   env: {
     NEXT_PUBLIC_LOCKRATE_LIVE: process.env.LOCKRATE_LIVE ?? "0",

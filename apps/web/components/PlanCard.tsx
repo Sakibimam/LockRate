@@ -30,7 +30,7 @@ export function PlanCard({ plan, fit, limits, stale }: { plan: HedgePlan; fit: F
         <li>
           Holding cost: about {usd(Math.abs(funding), 2)} a month {funding >= 0 ? "paid to you" : "paid by you"} at today's rate.
         </li>
-        {plan.capped && <li>Capped at your {usd(limits.maxNotionalUsd)} limit.</li>}
+        {plan.limitsApplied.some((l) => l.startsWith("notional capped")) && <li>Capped at your {usd(limits.maxNotionalUsd)} limit.</li>}
       </ul>
       {stale && (
         <p className="t-warn mt-3 text-sm">
