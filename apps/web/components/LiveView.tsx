@@ -36,14 +36,19 @@ export function LiveView({ enabled }: { enabled: boolean }) {
 
   if (!enabled) {
     return (
-      <div className="card space-y-2 text-sm">
-        <div className="text-lg font-medium">Live mode is off</div>
-        <p>
-          Set <code>LOCKRATE_LIVE=1</code> in <code>.env.local</code> and restart to show this page. Paper mode is the default on purpose.
+      <div className="max-w-xl">
+        <h1 className="text-3xl font-bold">Placing hedges is switched off</h1>
+        <p className="mt-3 text-[17px]">
+          This copy of Lockrate runs in practice mode, so you can explore plans without trading. Whoever runs it can switch
+          trading on.
         </p>
-        <p className="muted text-xs">
-          Live mode builds a SICI perp order from the plan on the Analyse page, previews every check, and hands the unsigned message to your wallet. Lockrate never holds keys or funds.
+        <p className="muted mt-3 text-sm">
+          To switch it on, set <code>LOCKRATE_LIVE=1</code> and restart. When it's on, this page turns your plan into an order,
+          shows every check, and hands it to your wallet to approve. Lockrate never holds keys or funds.
         </p>
+        <Link className="btn mt-5" href="/">
+          Back to my risk check
+        </Link>
       </div>
     );
   }
@@ -151,131 +156,165 @@ export function LiveView({ enabled }: { enabled: boolean }) {
     }
   }
 
+  const marketNote = !market
+    ? "Checking the market…"
+    : market.source !== "live"
+      ? "Market unreachable. Try again shortly."
+      : market.fresh
+        ? `Market price ${num(market.lastPrice)}`
+        : "Market prices are out of date, so orders are paused.";
+
   return (
-    <div className="space-y-4 text-sm">
-      <div className="card">
-        <div className="text-lg font-medium">Live · SICI perp on Injective {process.env.NEXT_PUBLIC_INJECTIVE_NETWORK}</div>
-        <p className="muted mt-1 text-xs">
-          one order, at 1x, inside the caps, signed in your wallet. if any check fails nothing is built.
+    <div className="max-w-3xl space-y-10">
+      <div>
+        <h1 className="text-3xl font-bold sm:text-[2.5rem]">Place a hedge</h1>
+        <p className="mt-3 text-[17px]">
+          One order on Injective {process.env.NEXT_PUBLIC_INJECTIVE_NETWORK}, with no leverage, approved in your own wallet. If
+          any check fails, nothing is built.
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="card space-y-2">
-          <div className="muted text-xs">1 · plan from the analyse page</div>
-          {!saved || !plan ? (
-            <p>
-              no plan saved. <Link className="underline" href="/">go back and run one</Link>.
-            </p>
-          ) : plan.quantity === 0 ? (
-            <p>the current verdict is {saved.result.fit.verdict}, so there is nothing to place.</p>
-          ) : (
-            <div>
-              <span className="capitalize">{plan.side}</span> {num(plan.quantity, 3)} SICI · {usd(plan.notionalUsd)} notional · margin {usd(plan.marginUsd)} · {saved.profile.name}
-            </div>
-          )}
-          <div className="muted text-xs">
-            market: {market ? (market.source === "live" ? `${market.fresh ? "fresh" : "stale"}, last ${num(market.lastPrice)}` : "indexer unreachable") : "loading"}
-          </div>
-        </div>
+      <Step n={1} title="Your plan">
+        {!saved || !plan ? (
+          <p>
+            No plan yet.{" "}
+            <Link className="link" href="/">
+              Check your risk first
+            </Link>
+            .
+          </p>
+        ) : plan.quantity === 0 ? (
+          <p>Your risk check said not to hedge, so there's nothing to place.</p>
+        ) : (
+          <p>
+            {plan.side === "short" ? "Sell" : "Buy"} <strong className="num">{num(plan.quantity, 3)}</strong> SICI, worth{" "}
+            {usd(plan.notionalUsd)}. You put up {usd(plan.marginUsd)} in USDC.
+          </p>
+        )}
+        <p className={`mt-1 text-sm ${market && market.source === "live" && market.fresh ? "muted" : "t-warn"}`}>{marketNote}</p>
+      </Step>
 
-        <div className="card space-y-2">
-          <div className="muted text-xs">2 · wallet</div>
-          {address ? (
-            <div className="break-all font-mono text-xs">{address}</div>
-          ) : (
-            <button className="primary text-xs" onClick={doConnect} disabled={busy !== null}>
-              {busy === "connecting" ? "connecting..." : "connect Keplr"}
-            </button>
-          )}
-          <label className="flex items-start gap-2 text-xs">
+      <Step n={2} title="Connect your wallet">
+        {address ? (
+          <p className="break-all text-sm">
+            Connected <span className="muted">{address}</span>
+          </p>
+        ) : (
+          <button className="btn btn-primary" onClick={doConnect} disabled={busy !== null}>
+            {busy === "connecting" ? "Connecting…" : "Connect Keplr or Leap"}
+          </button>
+        )}
+        <div className="mt-4 space-y-3">
+          <label className="flex items-start gap-3">
             <input type="checkbox" checked={notUs} onChange={(e) => setNotUs(e.target.checked)} />
-            <span>I am not a US person and I am allowed to trade this market where I live.</span>
+            <span>I am not a US person, and I'm allowed to trade this market where I live.</span>
           </label>
-          <label className="flex items-start gap-2 text-xs">
+          <label className="flex items-start gap-3">
             <input type="checkbox" checked={readSim} onChange={(e) => setReadSim(e.target.checked)} />
-            <span>I have looked at the paper simulation for this plan.</span>
+            <span>I've looked at the replay of this plan on the risk check page.</span>
           </label>
         </div>
-      </div>
+      </Step>
 
-      <div className="card space-y-3">
-        <div className="muted text-xs">3 · build and check</div>
-        <button className="primary text-xs" onClick={doBuild} disabled={!canBuild || busy !== null}>
-          {busy === "building" ? "building..." : "build order"}
+      <Step n={3} title="Check the order">
+        <button className="btn btn-primary" onClick={doBuild} disabled={!canBuild || busy !== null}>
+          {busy === "building" ? "Checking…" : "Check the order"}
         </button>
         {preview && (
-          <div className="space-y-1 text-xs">
-            <div>
-              {preview.kind} {preview.side} {num(preview.quantity, 3)} @ worst {num(preview.worstPrice)} · notional {usd(preview.notionalUsd, 2)} · margin {usd(preview.marginUsd, 2)} · {preview.leverage}x
-            </div>
-            <ul className="muted">
+          <div className="mt-4 text-sm">
+            <p>
+              {preview.side === "short" ? "Sell" : "Buy"} {num(preview.quantity, 3)} SICI, worst price {num(preview.worstPrice)},
+              worth {usd(preview.notionalUsd, 2)}. Margin {usd(preview.marginUsd, 2)}.
+            </p>
+            <ul className="mt-2 space-y-1">
               {preview.checks.map((c, i) => (
-                <li key={i}>✓ {c}</li>
+                <li key={i} className="t-ok">
+                  ✓ <span style={{ color: "var(--fg)" }}>{c.charAt(0).toUpperCase() + c.slice(1)}</span>
+                </li>
               ))}
             </ul>
-            <div className="muted break-all font-mono">subaccount {preview.subaccountId}</div>
           </div>
         )}
-      </div>
+      </Step>
 
-      <div className="card space-y-2">
-        <div className="muted text-xs">4 · sign</div>
-        <button className="primary text-xs" onClick={doSign} disabled={!preview || busy !== null}>
-          {busy === "waiting for wallet" ? "waiting for wallet..." : "sign in wallet"}
+      <Step n={4} title="Approve in your wallet">
+        <button className="btn btn-primary" onClick={doSign} disabled={!preview || busy !== null}>
+          {busy === "waiting for wallet" ? "Waiting for your wallet…" : "Approve and send"}
         </button>
         {txHash && (
-          <div className="text-xs">
-            sent.{" "}
-            <a className="underline" href={`https://explorer.injective.network/transaction/${txHash}`} target="_blank" rel="noreferrer">
-              {txHash}
+          <p className="mt-3 text-sm">
+            Sent.{" "}
+            <a className="link break-all" href={`https://explorer.injective.network/transaction/${txHash}`} target="_blank" rel="noreferrer">
+              View the transaction
             </a>
-          </div>
+          </p>
         )}
-        {err && <div className="t-bad text-xs">{err}</div>}
-      </div>
+        {err && <p className="t-bad mt-3 text-sm">{err.charAt(0).toUpperCase() + err.slice(1)}</p>}
+      </Step>
 
-      <div className="card space-y-2">
-        <div className="muted text-xs">5 · close</div>
-        <div className="flex items-center gap-2">
-          <button className="ghost text-xs" onClick={loadPosition} disabled={!address || busy !== null}>
-            {busy === "reading position" ? "reading..." : "read open position"}
+      <details className="border-t pt-6" style={{ borderColor: "var(--line)" }}>
+        <summary className="text-lg">Close an open hedge</summary>
+        <div className="mt-4 space-y-3 text-sm">
+          <button className="btn" onClick={loadPosition} disabled={!address || busy !== null}>
+            {busy === "reading position" ? "Looking…" : "Find my open hedge"}
           </button>
-          {position === null && <span className="muted text-xs">no open SICI position on this subaccount</span>}
+          {!address && <p className="muted">Connect your wallet first.</p>}
+          {position === null && <p className="muted">You have no open SICI position.</p>}
           {position && (
-            <span className="text-xs">
-              {position.direction} {num(position.quantity, 3)} @ {num(position.entryPrice)} · mark {num(position.markPrice)} · margin {usd(position.margin, 2)}
-            </span>
+            <p>
+              {position.direction === "short" ? "Sold" : "Bought"} {num(position.quantity, 3)} SICI at {num(position.entryPrice)}.
+              Market now {num(position.markPrice)}. Margin {usd(position.margin, 2)}.
+            </p>
+          )}
+          {position && (
+            <div className="flex flex-wrap gap-3">
+              <button className="btn" onClick={buildClose} disabled={busy !== null}>
+                Check the close order
+              </button>
+              {closePreview && (
+                <button className="btn btn-primary" onClick={signClose} disabled={busy !== null}>
+                  Approve and close
+                </button>
+              )}
+            </div>
+          )}
+          {closePreview && (
+            <ul className="space-y-1">
+              {closePreview.checks.map((c, i) => (
+                <li key={i} className="t-ok">
+                  ✓ <span style={{ color: "var(--fg)" }}>{c.charAt(0).toUpperCase() + c.slice(1)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {closeHash && (
+            <p>
+              Closed.{" "}
+              <a className="link" href={`https://explorer.injective.network/transaction/${closeHash}`} target="_blank" rel="noreferrer">
+                View the transaction
+              </a>
+            </p>
           )}
         </div>
-        {position && (
-          <div className="flex items-center gap-2">
-            <button className="ghost text-xs" onClick={buildClose} disabled={busy !== null}>
-              build reduce-only close
-            </button>
-            {closePreview && (
-              <button className="primary text-xs" onClick={signClose} disabled={busy !== null}>
-                sign close
-              </button>
-            )}
-          </div>
-        )}
-        {closePreview && (
-          <ul className="muted text-xs">
-            {closePreview.checks.map((c, i) => (
-              <li key={i}>✓ {c}</li>
-            ))}
-          </ul>
-        )}
-        {closeHash && (
-          <div className="text-xs">
-            closed.{" "}
-            <a className="underline" href={`https://explorer.injective.network/transaction/${closeHash}`} target="_blank" rel="noreferrer">
-              {closeHash}
-            </a>
-          </div>
-        )}
-      </div>
+      </details>
     </div>
+  );
+}
+
+function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
+  return (
+    <section className="grid grid-cols-[36px_1fr] gap-x-4">
+      <span
+        className="display flex h-9 w-9 items-center justify-center rounded-full text-base font-bold"
+        style={{ background: "var(--surface)", boxShadow: "0 0 0 1px var(--line)" }}
+        aria-hidden
+      >
+        {n}
+      </span>
+      <div className="min-w-0">
+        <h2 className="pt-1 text-xl font-bold">{title}</h2>
+        <div className="mt-3">{children}</div>
+      </div>
+    </section>
   );
 }

@@ -3,6 +3,7 @@ import { explainVerdict, hasKey } from "@lockrate/explain";
 import type { Profile, RunResult } from "@lockrate/engine";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   if (!hasKey()) {

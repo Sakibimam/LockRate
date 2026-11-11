@@ -1,28 +1,38 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #fafaf9;
-  --fg: #171717;
-  --muted: #6b6b6b;
-  --line: #e5e5e3;
-  --card: #ffffff;
-  --ok: #15803d;
-  --warn: #b45309;
-  --bad: #b91c1c;
-  --accent: #0f766e;
+  --bg: #f1f4f2;
+  --surface: #ffffff;
+  --fg: #13201c;
+  --muted: #5b6863;
+  --line: #d8e0dc;
+  --accent: #0e6b4f;
+  --accent-soft: #e2f0ea;
+  --ok: #0e6b4f;
+  --ok-soft: #e2f0ea;
+  --warn: #94560a;
+  --warn-soft: #f8eedd;
+  --bad: #a23b2a;
+  --bad-soft: #f8e6e2;
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-public), ui-sans-serif, system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #111110;
-    --fg: #ededeb;
-    --muted: #9a9a96;
-    --line: #2a2a28;
-    --card: #19191814;
-    --ok: #4ade80;
-    --warn: #fbbf24;
-    --bad: #f87171;
-    --accent: #2dd4bf;
+    --bg: #0f1714;
+    --surface: #16201c;
+    --fg: #e6ece9;
+    --muted: #94a39d;
+    --line: #2a3632;
+    --accent: #5cc79c;
+    --accent-soft: #173a2d;
+    --ok: #5cc79c;
+    --ok-soft: #173a2d;
+    --warn: #e7b25a;
+    --warn-soft: #3a2c14;
+    --bad: #ec8a78;
+    --bad-soft: #3d1f19;
   }
 }
 
@@ -32,71 +42,190 @@ html {
 }
 
 body {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-feature-settings: "tnum" 1, "cv11" 1;
+  background: var(--bg);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
 }
 
-.card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 16px;
-}
-
-.muted {
-  color: var(--muted);
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+  line-height: 1.15;
 }
 
 .num {
   font-variant-numeric: tabular-nums;
 }
 
-input,
+.muted {
+  color: var(--muted);
+}
+
+/* the form side: the only boxed surface on the page */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.field-label {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+input[type="number"],
+input[type="text"],
 select,
 textarea {
-  background: transparent;
+  width: 100%;
+  min-width: 0;
+  background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 6px 8px;
+  border-radius: 8px;
+  padding: 8px 10px;
   font: inherit;
   color: inherit;
 }
 
-input:focus,
-select:focus,
-textarea:focus {
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+}
+
+:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
-button.primary {
-  background: var(--fg);
-  color: var(--bg);
-  border-radius: 6px;
-  padding: 8px 14px;
-  font-weight: 500;
-}
-
-button.primary:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-button.ghost {
+/* two-way toggle */
+.seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 6px 12px;
+  border-radius: 10px;
+  padding: 3px;
+}
+.seg button {
+  border-radius: 7px;
+  padding: 7px 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.seg button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--fg);
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--line);
 }
 
-.verdict-hedge {
-  border-color: var(--ok);
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
 }
-.verdict-partial {
-  border-color: var(--warn);
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
-.verdict-skip {
-  border-color: var(--bad);
+@media (prefers-color-scheme: dark) {
+  .btn-primary {
+    color: #0f1714;
+  }
 }
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* expandable sections */
+details > summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+details > summary::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s;
+}
+details[open] > summary::before {
+  transform: rotate(45deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  details > summary::before {
+    transition: none;
+  }
+}
+
+/* the answer, tinted by verdict */
+.answer {
+  border-radius: 16px;
+  padding: 28px;
+}
+.answer-hedge {
+  background: var(--ok-soft);
+  --tone: var(--ok);
+}
+.answer-partial {
+  background: var(--warn-soft);
+  --tone: var(--warn);
+}
+.answer-skip {
+  background: var(--bad-soft);
+  --tone: var(--bad);
+}
+.tone {
+  color: var(--tone);
+}
+
 .t-ok {
   color: var(--ok);
 }
@@ -105,4 +234,55 @@ button.ghost {
 }
 .t-bad {
   color: var(--bad);
+}
+
+/* rows of plain-language facts */
+.facts > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.facts > div:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.facts dd {
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+table.plain {
+  width: 100%;
+  font-size: 14px;
+}
+table.plain th {
+  font-weight: 500;
+  color: var(--muted);
+  text-align: left;
+  padding: 6px 0;
+}
+table.plain td {
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+}
+table.plain .r {
+  text-align: right;
+}
+
+/* recharts writes colours as svg attributes, where css variables don't resolve */
+.chart .line-without path {
+  stroke: var(--muted);
+}
+.chart .line-with path {
+  stroke: var(--accent);
+}
+.chart .chart-grid line {
+  stroke: var(--line);
+}
+html,
+body {
+  overflow-x: clip;
 }

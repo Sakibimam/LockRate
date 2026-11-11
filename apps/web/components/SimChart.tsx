@@ -2,67 +2,69 @@
 
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { SimResult } from "@lockrate/engine";
-import { pct, signed, usd } from "@/lib/format";
+import { pct, usd } from "@/lib/format";
 
-export function SimChart({ sim, role }: { sim: SimResult; role: "operator" | "buyer" }) {
+const monthLabel = (t: string) => {
+  const d = new Date(`${t.slice(0, 7)}-01T00:00:00Z`);
+  return Number.isNaN(d.getTime()) ? t : d.toLocaleString("en-US", { month: "short", year: "2-digit", timeZone: "UTC" });
+};
+
+export function SimChart({ sim, hedged }: { sim: SimResult; hedged: boolean }) {
   let cu = 0;
   let ch = 0;
   const rows = sim.periods.map((p) => {
     cu += p.unhedgedPnl;
     ch += p.hedgedPnl;
-    return { t: p.t, unhedged: Math.round(cu), hedged: Math.round(ch), index: p.indexPrice };
+    return { t: monthLabel(p.t), without: Math.round(cu), with: Math.round(ch) };
   });
-  const better = sim.volReduction > 0;
+  const calmer = sim.volReduction > 0;
+
+  let summary: string;
+  if (!hedged) summary = "With no hedge suggested, this is how your prices alone moved your money.";
+  else if (calmer) summary = `With the hedge, your month-to-month swings would have been ${pct(sim.volReduction, 0)} smaller.`;
+  else summary = `The hedge would have made your month-to-month swings ${pct(Math.abs(sim.volReduction), 0)} bigger.`;
+
   return (
-    <div className="card text-sm">
-      <div className="flex items-baseline justify-between">
-        <div className="muted text-xs">paper simulation · cumulative monthly P&amp;L vs the first month, {role === "operator" ? "revenue" : "cost"} view</div>
-        <div className={`text-xs ${better ? "t-ok" : "t-bad"}`}>
-          {better ? "volatility down" : "volatility up"} {pct(Math.abs(sim.volReduction), 0)}
-        </div>
+    <section>
+      <h2 className="text-2xl font-bold">The last {sim.periods.length} months, replayed</h2>
+      <p className="mt-2 max-w-2xl text-[17px]">{summary}</p>
+
+      <div className="mt-4 flex flex-wrap gap-5 text-sm">
+        <span className="flex items-center gap-2">
+          <span className="inline-block h-[3px] w-5 rounded" style={{ background: "var(--muted)" }} />
+          Without a hedge
+        </span>
+        {hedged && (
+          <span className="flex items-center gap-2">
+            <span className="inline-block h-[3px] w-5 rounded" style={{ background: "var(--accent)" }} />
+            With the hedge
+          </span>
+        )}
       </div>
-      <div className="mt-2 h-56">
+
+      <div className="mt-3 h-64" role="img" aria-label={summary}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-            <CartesianGrid stroke="var(--line)" vertical={false} />
-            <XAxis dataKey="t" tick={{ fontSize: 10 }} stroke="var(--muted)" />
-            <YAxis tick={{ fontSize: 10 }} stroke="var(--muted)" tickFormatter={(v: number) => usd(v)} width={70} />
-            <Tooltip
-              contentStyle={{ background: "var(--bg)", border: "1px solid var(--line)", fontSize: 12 }}
-              formatter={(v) => usd(Number(v))}
+          <LineChart className="chart" data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+            <CartesianGrid className="chart-grid" stroke="#d8e0dc" vertical={false} />
+            <XAxis dataKey="t" tick={{ fontSize: 12, fill: "var(--muted)" }} stroke="var(--line)" tickLine={false} />
+            <YAxis
+              tick={{ fontSize: 12, fill: "var(--muted)" }}
+              stroke="var(--line)"
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(v: number) => usd(v)}
+              width={76}
             />
-            <Line type="monotone" dataKey="unhedged" stroke="var(--muted)" dot={false} strokeWidth={1.5} name="unhedged" />
-            <Line type="monotone" dataKey="hedged" stroke="var(--accent)" dot={false} strokeWidth={2} name="hedged" />
+            <Tooltip
+              contentStyle={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 13 }}
+              formatter={(v, name) => [usd(Number(v)), name === "with" ? "With the hedge" : "Without a hedge"]}
+            />
+            <Line className="line-without" type="monotone" dataKey="without" stroke="#5b6863" dot={false} strokeWidth={2} isAnimationActive={false} />
+            {hedged && <Line className="line-with" type="monotone" dataKey="with" stroke="#0e6b4f" dot={false} strokeWidth={2.5} isAnimationActive={false} />}
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <table className="mt-3 w-full text-xs">
-        <thead className="muted">
-          <tr>
-            <th className="text-left font-normal"></th>
-            <th className="text-right font-normal">total</th>
-            <th className="text-right font-normal">worst month</th>
-            <th className="text-right font-normal">monthly stdev</th>
-          </tr>
-        </thead>
-        <tbody className="num">
-          <tr>
-            <td>unhedged</td>
-            <td className="text-right">{signed(sim.unhedged.total)}</td>
-            <td className="text-right">{usd(sim.unhedged.worst)}</td>
-            <td className="text-right">{usd(sim.unhedged.stdev)}</td>
-          </tr>
-          <tr>
-            <td>hedged</td>
-            <td className="text-right">{signed(sim.hedged.total)}</td>
-            <td className="text-right">{usd(sim.hedged.worst)}</td>
-            <td className="text-right">{usd(sim.hedged.stdev)}</td>
-          </tr>
-        </tbody>
-      </table>
-      <p className="muted mt-2 text-[11px]">
-        {sim.periods.length} months. position held at the planned size, no rolling. cost of hedge if it lost money: {usd(sim.costOfHedgeUsd)}.
-      </p>
-    </div>
+      <p className="muted mt-2 text-sm">Running total of how much your monthly money changed compared with the first month.</p>
+    </section>
   );
 }

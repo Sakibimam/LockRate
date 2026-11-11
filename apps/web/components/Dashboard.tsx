@@ -5,12 +5,11 @@ import { run, type Limits, type Profile, type SeriesPoint } from "@lockrate/engi
 import type { SiciApi } from "@/app/api/sici/route";
 import { save } from "@/lib/store";
 import { ProfileForm } from "./ProfileForm";
-import { SiciStrip } from "./SiciStrip";
-import { ExposureCard } from "./ExposureCard";
-import { FitCard } from "./FitCard";
-import { VerdictBanner } from "./VerdictBanner";
+import { MarketLine } from "./MarketLine";
+import { Answer } from "./Answer";
 import { PlanCard } from "./PlanCard";
 import { SimChart } from "./SimChart";
+import { Details } from "./Details";
 import { ExplainBox } from "./ExplainBox";
 
 export interface ProxyMap {
@@ -26,7 +25,7 @@ interface Props {
   dataGeneratedAt: string;
 }
 
-export function Dashboard({ profiles, proxies, index, daily, limits, dataGeneratedAt }: Props) {
+export function Dashboard({ profiles, proxies, index, daily, limits }: Props) {
   const [profile, setProfile] = useState<Profile>(profiles[0] as Profile);
   const [own, setOwn] = useState<SeriesPoint[]>(proxies[profiles[0]?.proxy ?? ""]?.points ?? []);
   const [ownLabel, setOwnLabel] = useState<string>(profiles[0]?.proxy ?? "custom");
@@ -72,37 +71,41 @@ export function Dashboard({ profiles, proxies, index, daily, limits, dataGenerat
   const stale = market ? !market.fresh : true;
 
   return (
-    <div className="space-y-6">
-      <SiciStrip market={market} fallbackPrice={lastClose} dataGeneratedAt={dataGeneratedAt} />
+    <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[360px_minmax(0,1fr)]">
+      <div className="min-w-0 lg:sticky lg:top-6">
+        <ProfileForm
+          profiles={profiles}
+          profile={profile}
+          onProfile={setProfile}
+          onPick={pickProfile}
+          proxies={proxies}
+          ownLabel={ownLabel}
+          onOwn={(pts, label) => {
+            setOwn(pts);
+            setOwnLabel(label);
+          }}
+          scale={scale}
+          onScale={setScale}
+        />
+      </div>
 
-      <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+      <div className="min-w-0 space-y-12">
         <div className="space-y-4">
-          <ProfileForm
-            profiles={profiles}
-            profile={profile}
-            onProfile={setProfile}
-            onPick={pickProfile}
-            proxies={proxies}
-            ownLabel={ownLabel}
-            onOwn={(pts, label) => {
-              setOwn(pts);
-              setOwnLabel(label);
-            }}
-            scale={scale}
-            onScale={setScale}
-          />
+          <MarketLine market={market} fallbackPrice={lastClose} />
+          <Answer fit={result.fit} exposure={result.exposure} plan={result.plan} profile={profile} />
         </div>
-
-        <div className="space-y-4">
-          <VerdictBanner fit={result.fit} stale={stale} />
-          <div className="grid gap-4 md:grid-cols-2">
-            <ExposureCard exposure={result.exposure} profile={profile} />
-            <FitCard fit={result.fit} ownLabel={ownLabel} n={own.length} />
-          </div>
-          <PlanCard plan={result.plan} fit={result.fit} limits={limits} stale={stale} />
-          <SimChart sim={result.sim} role={profile.role} />
-          <ExplainBox profile={profile} result={result} />
-        </div>
+        <PlanCard plan={result.plan} fit={result.fit} limits={limits} stale={stale} />
+        <SimChart sim={result.sim} hedged={result.plan.quantity > 0} />
+        <ExplainBox profile={profile} result={result} />
+        <Details
+          fit={result.fit}
+          exposure={result.exposure}
+          plan={result.plan}
+          sim={result.sim}
+          limits={limits}
+          ownLabel={ownLabel}
+          ownMonths={own.length}
+        />
       </div>
     </div>
   );

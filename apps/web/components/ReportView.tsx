@@ -49,77 +49,81 @@ export function ReportView({ indexStart, indexEnd, from, to, daily }: Props) {
 
   if (!saved) {
     return (
-      <div className="card text-sm">
-        nothing to report yet. <Link className="underline" href="/">run an analysis first</Link>.
+      <div className="max-w-xl">
+        <h1 className="text-3xl font-bold">Monthly statement</h1>
+        <p className="mt-3 text-[17px]">
+          There's nothing to report yet. Check your risk first and your statement will appear here.
+        </p>
+        <Link className="btn btn-primary mt-5" href="/">
+          Check my risk
+        </Link>
       </div>
     );
   }
 
   const plan = saved.result.plan;
+  const indexChange = ((indexEnd - indexStart) / indexStart) * 100;
+  const fmtDate = (d: string) =>
+    new Date(`${d}T00:00:00Z`).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
   return (
-    <div className="space-y-4">
-      <div className="card text-sm">
-        <div className="muted text-xs">statement period · since SICI launch</div>
-        <div className="mt-1 text-lg font-medium">
-          {from} → {to}
-        </div>
-        <div className="muted text-xs">
-          SICI {num(indexStart)} → {num(indexEnd)} ({signed(((indexEnd - indexStart) / indexStart) * 100, 2).replace("$", "")}%), {daily.length} trading days
-        </div>
+    <div className="max-w-3xl space-y-12">
+      <div>
+        <h1 className="text-3xl font-bold sm:text-[2.5rem]">Monthly statement</h1>
+        <p className="mt-3 text-[17px]">
+          From {fmtDate(from)} to {fmtDate(to)}, the GPU price index went {indexChange >= 0 ? "up" : "down"}{" "}
+          <span className="num">{num(Math.abs(indexChange))}%</span>, from <span className="num">{num(indexStart)}</span> to{" "}
+          <span className="num">{num(indexEnd)}</span>.
+        </p>
+        <p className="muted mt-2">
+          {plan.quantity > 0
+            ? `Your hedge: ${plan.side === "short" ? "sold" : "bought"} ${num(plan.quantity, 3)} SICI at ${num(plan.entryPrice)}, worth ${usd(plan.notionalUsd)}.`
+            : "You had no hedge in place."}{" "}
+          Based on {saved.profile.name.charAt(0).toLowerCase() + saved.profile.name.slice(1)}.
+        </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="card text-sm">
-          <div className="muted text-xs">your rate over the same period ($/GPU-hour)</div>
-          <div className="mt-2 grid grid-cols-2 gap-3">
-            <label className="text-xs">
-              at {from}
-              <input className="num mt-1 w-full" type="number" step="0.01" value={ownStart} onChange={(e) => setOwnStart(Number(e.target.value))} />
-            </label>
-            <label className="text-xs">
-              at {to}
-              <input className="num mt-1 w-full" type="number" step="0.01" value={ownEnd} onChange={(e) => setOwnEnd(Number(e.target.value))} />
-            </label>
-          </div>
-          <p className="muted mt-2 text-[11px]">
-            prefilled from your last history point and the blended rate in the form. replace with what you actually billed.
-          </p>
+      <section>
+        <h2 className="text-2xl font-bold">Your price per GPU-hour</h2>
+        <p className="muted mt-1">We filled these in from your settings. Change them to what you actually billed or paid.</p>
+        <div className="mt-4 grid max-w-md grid-cols-2 gap-4">
+          <label>
+            <span className="field-label">On {fmtDate(from)}</span>
+            <input className="num" type="number" step="0.01" value={ownStart} onChange={(e) => setOwnStart(Number(e.target.value))} />
+          </label>
+          <label>
+            <span className="field-label">On {fmtDate(to)}</span>
+            <input className="num" type="number" step="0.01" value={ownEnd} onChange={(e) => setOwnEnd(Number(e.target.value))} />
+          </label>
         </div>
-        <div className="card text-sm">
-          <div className="muted text-xs">position on the books</div>
-          {plan.quantity > 0 ? (
-            <div className="mt-1">
-              <span className="capitalize">{plan.side}</span> {num(plan.quantity, 3)} SICI at {num(plan.entryPrice)}, {usd(plan.notionalUsd)} notional, {plan.leverage}x
-            </div>
-          ) : (
-            <div className="mt-1">no hedge (verdict {saved.result.fit.verdict})</div>
-          )}
-          <div className="muted mt-1 text-xs">{saved.profile.name}</div>
-        </div>
-      </div>
+      </section>
 
       {statement && (
-        <div className="card text-sm">
-          <div className="muted text-xs">result</div>
-          <table className="mt-2 w-full num">
-            <tbody>
-              <tr>
-                <td className="py-1">unhedged</td>
-                <td className="text-right">{signed(statement.actualPnlUsd)}</td>
-              </tr>
-              <tr>
-                <td className="py-1">hedge after fees and funding</td>
-                <td className="text-right">{signed(statement.hedgePnlUsd)}</td>
-              </tr>
-              <tr className="border-t font-medium" style={{ borderColor: "var(--line)" }}>
-                <td className="py-1">net</td>
-                <td className="text-right">{signed(statement.hedgedPnlUsd)}</td>
-              </tr>
-            </tbody>
-          </table>
-          <pre className="muted mt-3 whitespace-pre-wrap text-xs">{statement.lines.join("\n")}</pre>
-        </div>
+        <section>
+          <h2 className="text-2xl font-bold">How it worked out</h2>
+          <dl className="facts mt-4">
+            <div>
+              <dt>Change from your prices alone</dt>
+              <dd>{signed(statement.actualPnlUsd)}</dd>
+            </div>
+            <div>
+              <dt>Hedge result, after fees and holding costs</dt>
+              <dd>{signed(statement.hedgePnlUsd)}</dd>
+            </div>
+            <div>
+              <dt className="font-semibold">Overall</dt>
+              <dd className="text-lg">{signed(statement.hedgedPnlUsd)}</dd>
+            </div>
+          </dl>
+          <details className="mt-6">
+            <summary>Line-by-line breakdown</summary>
+            <ul className="muted mt-3 space-y-1 text-sm">
+              {statement.lines.map((l, i) => (
+                <li key={i}>{l}</li>
+              ))}
+            </ul>
+          </details>
+        </section>
       )}
     </div>
   );

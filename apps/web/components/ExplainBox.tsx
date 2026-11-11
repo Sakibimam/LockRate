@@ -18,30 +18,32 @@ export function ExplainBox({ profile, result }: { profile: Profile; result: RunR
         body: JSON.stringify({ profile, result }),
       });
       const j = (await r.json()) as { text?: string; error?: string };
-      if (!r.ok) throw new Error(j.error ?? "failed");
+      if (r.status === 503) throw new Error("Written explanations aren't set up on this server.");
+      if (!r.ok) throw new Error(j.error ?? "Couldn't write an explanation. Try again.");
       setText(j.text ?? "");
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "failed");
+      setErr(e instanceof Error ? e.message : "Couldn't write an explanation.");
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div className="card text-sm">
-      <div className="flex items-center justify-between">
-        <div className="muted text-xs">in plain words</div>
-        <button className="ghost text-xs" onClick={go} disabled={busy}>
-          {busy ? "writing..." : text ? "rewrite" : "explain this"}
-        </button>
-      </div>
-      {text && <p className="mt-2 whitespace-pre-line leading-relaxed">{text}</p>}
-      {err && <p className="muted mt-2 text-xs">{err}</p>}
-      {!text && !err && (
-        <p className="muted mt-2 text-xs">
-          the summary is written by a model from the numbers above. it never changes them.
-        </p>
+    <section>
+      {text ? (
+        <>
+          <h2 className="text-2xl font-bold">In plain words</h2>
+          <p className="mt-2 max-w-2xl whitespace-pre-line text-[17px]">{text}</p>
+          <p className="muted mt-2 text-sm">Written by AI from the numbers above. It doesn't change them.</p>
+        </>
+      ) : (
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="button" className="btn" onClick={go} disabled={busy}>
+            {busy ? "Writing…" : "Explain this in plain words"}
+          </button>
+          {err && <span className="muted text-sm">{err}</span>}
+        </div>
       )}
-    </div>
+    </section>
   );
 }

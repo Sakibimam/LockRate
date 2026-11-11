@@ -1,44 +1,39 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Bricolage_Grotesque, Public_Sans } from "next/font/google";
+import { Nav } from "@/components/Nav";
 import "./globals.css";
+
+const bricolage = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-bricolage", weight: ["500", "700"] });
+const publicSans = Public_Sans({ subsets: ["latin"], variable: "--font-public" });
 
 export const metadata: Metadata = {
   title: "Lockrate",
-  description: "GPU price exposure, SICI hedge fit, and paper hedges on Injective",
+  description: "Find out whether your GPU rental prices can be hedged, and by how much.",
 };
 
 const live = process.env.NEXT_PUBLIC_LOCKRATE_LIVE === "1";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${bricolage.variable} ${publicSans.variable}`}>
       <body className="min-h-screen">
         <header className="border-b" style={{ borderColor: "var(--line)" }}>
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-6">
-              <Link href="/" className="font-semibold tracking-tight">
-                Lockrate
-              </Link>
-              <nav className="flex gap-4 text-sm">
-                <Link href="/">Analyse</Link>
-                <Link href="/report">Report</Link>
-                <Link href="/live">Live</Link>
-              </nav>
-            </div>
-            <div className="flex items-center gap-3 text-xs">
-              <span className="rounded-full border px-2 py-0.5" style={{ borderColor: "var(--line)" }}>
-                {live ? "live enabled" : "paper mode"}
-              </span>
-              <a className="muted" href="https://github.com/Sakibimam/LockRate" target="_blank" rel="noreferrer">
-                source
-              </a>
-            </div>
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-4">
+            <a href="/" className="display text-xl font-bold">
+              Lockrate
+            </a>
+            <Nav />
           </div>
         </header>
-        <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
-        <footer className="mx-auto max-w-6xl px-4 py-8 text-xs muted">
-          Lockrate measures exposure and builds hedges you sign yourself. It is not financial advice. SICI markets are
-          young and thin. Options are testnet-only. Check what applies where you are.
+        <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+        <footer className="mx-auto max-w-6xl px-4 pb-10 text-sm muted">
+          <p className="max-w-2xl">
+            {live ? "Live trading is switched on." : "Practice mode. Nothing is traded."} Lockrate never holds your keys or
+            funds, and this is not financial advice.{" "}
+            <a className="underline" href="https://github.com/Sakibimam/LockRate" target="_blank" rel="noreferrer">
+              Source code
+            </a>
+          </p>
         </footer>
       </body>
     </html>
