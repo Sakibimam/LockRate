@@ -2,7 +2,7 @@
   "marketId": "0x6751442adea73a2b65adce484dd7bde25d204c9695fc9d5410933171f3417410",
   "ticker": "SICI/USDC PERP",
   "source": "injective indexer. chronos daily candles when available, otherwise trades bucketed per utc day",
-  "generatedAt": "2026-11-10T17:48:03Z",
+  "generatedAt": "2026-11-11T01:09:58.718Z",
   "days": [
     {
       "t": "2026-10-26",
