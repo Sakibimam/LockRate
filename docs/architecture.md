@@ -164,7 +164,7 @@ sequenceDiagram
 
 - **Vercel:** Root Directory must be `apps/web`.
 - `data/` sits *outside* `apps/web`, and Next.js can't see a file read at runtime. So `next.config.ts` lists `../../data/**/*.json` under `outputFileTracingIncludes`, which copies the files into every serverless function. Without that line every page crashes with `could not find data/ directory`.
-- The root `vercel.json` skips builds for commits that only touch docs.
+- The root `vercel.json` turns off Git-triggered deploys, but Vercel only reads it while Root Directory is the repo root, which is the setting that can't build. Once Root Directory is `apps/web`, the file is ignored and pushes deploy automatically.
 - Serverless filesystems are read-only, so `pnpm snapshot` has to run somewhere else, for example a local machine or a CI job, followed by a redeploy.
 
 ## Testing

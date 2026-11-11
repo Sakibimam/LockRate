@@ -182,6 +182,14 @@ It runs on Vercel with no special setup beyond one setting:
 2. Set **Root Directory** to `apps/web`. This matters: the app lives in a subfolder, and builds from the repo root fail with `No Next.js version detected`.
 3. Add any of the settings above as environment variables, then deploy.
 
+If Root Directory is left at the repo root, the `vercel.json` there switches off Git-triggered deploys so pushes don't produce failed builds. Once you set `apps/web`, Vercel ignores that file and every push to `main` deploys.
+
+To deploy by hand from your machine:
+
+```bash
+vercel build --prod && vercel deploy --prebuilt --prod
+```
+
 The `data/` folder is bundled into the server automatically (see `apps/web/next.config.ts`), so it needs no database. The trade-off is that refreshing SICI prices means running `pnpm snapshot` and redeploying.
 
 ## Roadmap
