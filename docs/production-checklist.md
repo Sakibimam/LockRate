@@ -56,7 +56,7 @@ What is done, what is missing, in the order I would fix it. Ticked items are in 
 
 ## Ops
 
-- [ ] deploy (Vercel or a small VM, nothing exotic needed)
+- [x] deploy on Vercel (https://lockrate.vercel.app), data/ bundled into the functions
 - [ ] hourly cron for `pnpm snapshot`
 - [ ] error reporting on the API routes
 - [ ] rate limit on /api/parse and /api/explain

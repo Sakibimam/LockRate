@@ -1,23 +1,25 @@
-# Two minute demo
+# Two-minute demo
 
-Run `pnpm dev`, open http://localhost:3000.
+Open **https://lockrate.vercel.app**, or run `pnpm dev` and open http://localhost:3000.
 
-1. **Strip at the top.** Live SICI print from Injective mainnet, 24h change, index value, funding, and whether the data is fresh enough to plan on.
+1. **The line at the top of the answer** is the live SICI price from Injective mainnet, its change today, and how fresh it is. If the market hasn't traded in 3 hours, placing a hedge is switched off.
 
-2. **Marketplace host, 64 H100s, 100% spot.** Default profile. Point at the exposure card: about $70k a month floats with spot, $706 per 1% move. Fit score 0.98 against the H100 marketplace proxy, beta 1.06. Verdict: hedge. Plan: short ~464 SICI at 1x, which is the $50k default cap, not the full book. Simulation: monthly volatility down about 60%, and the worst months mostly gone.
+2. **Pick "Marketplace host, 64 H100s, 100% spot".** The answer turns green: *Yes, a hedge would protect you.* About $70k a month moves with the market, and a 1% drop costs $706 a month. The price match is *Strong*. *What to do* says to sell about 464 SICI with no leverage. That's the $50k cap, not the whole business. The replay shows month-to-month swings about 61% smaller.
 
-3. **Switch to Neocloud, 80% contracted.** Verdict flips to don't hedge. Fit score is -0.58: reserved contract prices rose while the basket fell. Plan card shows no position. This is the slide that matters.
+3. **Switch to "Neocloud, 512 H100s, 80% on 1y contracts".** The answer turns red: *No. A hedge wouldn't protect you.* Its contract prices rose while the index fell, so the price match is *Opposite*. *What to do* says nothing for now. **This is the slide that matters.**
 
-4. **Decentralised provider, 4090 + A100.** Fit 0.55, partial. A third of the fleet is not in the index at all. Half-size hedge, and the simulation only takes about 12% of the volatility out. The leftover is the basis, on screen.
+4. **"Decentralised provider, 4090 + A100 mix".** Amber: *a small hedge could help a little.* A fifth of the fleet's hours are on cards that aren't in the index. The half-size hedge only removes about 12% of the swings, and the leftover risk is on screen.
 
-5. **AI team buyer.** Same engine, long side. Fit 0.93, long ~285 SICI.
+5. **"AI team, on-demand inference buyer".** The same engine, pointed the other way. This business *pays* more when prices rise, so the plan is to **buy** about 285 SICI.
 
-6. **Drag the spot share slider on any profile.** Exposure and plan size move, fit score does not. Price risk and basis risk are separate numbers.
+6. **Drag "Income at market prices" on any example.** The dollars and the hedge size move, but the price match doesn't. How much risk you have and whether the index tracks it are separate questions.
 
-7. **Paste a few monthly prices into the CSV box.** The score recomputes on your data.
+7. **More settings → Your past prices → "My own, pasted in".** Paste a few months like `2026-03, 2.15`. The answer recomputes on your own data.
 
-8. **Explain this.** Model writes the summary from the computed numbers. Skip if no API key.
+8. **Explain this in plain words.** The AI writes a summary of the numbers above. It works only if an API key is set, and everything else works without one.
 
-9. **Report tab.** Statement since launch: what the index did, what your rate did, what the hedge would have returned after fees and funding.
+9. **How this was worked out** opens the maths: price match bar, beta, per-card table, replay statistics, limits.
 
-10. **Live tab.** Off by default. With `LOCKRATE_LIVE=1` and Keplr: connect, tick the two boxes, build the order, read the checks, sign. Then read the position back and build the reduce-only close.
+10. **Monthly statement** shows what the index did since launch, what your price did, and what the hedge would have returned after costs.
+
+11. **Place a hedge** is switched off on the public site. With `LOCKRATE_LIVE=1` and Keplr: connect, tick the two boxes, check the order, read the checks, approve. Then use *Close an open hedge* to read the position back and build a reduce-only close.
